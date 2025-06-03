@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestData>
+  <Item id="1">
+    <Name>Test Item 1</Name>
+    <Value>100</Value>
+  </Item>
+  <Item id="2">
+    <Name>Test Item 2</Name>
+    <Value>200</Value>
+  </Item>
+</TestData>
