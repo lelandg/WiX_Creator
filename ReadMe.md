@@ -8,6 +8,9 @@ This script is designed to create a WiX installer for applications. It automates
 - It automatically reloads settings from a configuration file, based on "Product Name".
 
 ### Requirements:
+_From this repository_, the only _requrement_ is the `wix_creator.py` script. 
+
+To build the resulting installer, you will need the following:
 
 #### WixToolset.BuildTools
 You need this installed in every project you want to use this with. You can install it using the following command:
