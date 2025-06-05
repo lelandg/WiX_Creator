@@ -297,7 +297,7 @@ def create_wxs_file(output_dir, options, file_structure):
         ET.SubElement(package, "UIRef", Id="WixUI_InstallDir")
 
         # Create an element to hold custom UI modifications
-        ui_element = ET.SubElement(package, "UI")
+        ui_element = ET.SubElement(package, ET.QName(UI_NS, "UI"))
 
         # Add custom UI dialog for installation options
         dialog = ET.SubElement(ui_element, ET.QName(UI_NS, "Dialog"),
