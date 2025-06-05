@@ -1,12 +1,12 @@
 <?xml version="1.0" ?>
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="4.0">
+<Project Sdk="WixToolset.Sdk/6.0.0">
   <PropertyGroup>
-    <Configuration>Debug</Configuration>
-    <Platform>x86</Platform>
-    <ProductVersion>1.0.11</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <OutputName>MeshForge</OutputName>
     <OutputType>Package</OutputType>
+    <Configuration>Release</Configuration>
+    <Platform>x64</Platform>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+    <ProjectDir>/app/Installer</ProjectDir>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="MeshForge.wxs"/>
@@ -15,5 +15,4 @@
     <WixExtension Include="WixToolset.UI.wixext"/>
     <WixExtension Include="WixToolset.Util.wixext"/>
   </ItemGroup>
-  <Import Project="$(WixTargetsPath)" Condition="Exists('$(WixTargetsPath)')"/>
 </Project>
