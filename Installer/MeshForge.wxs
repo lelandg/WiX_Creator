@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <Wix xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui" xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="MeshForge" Manufacturer="Leland Green Productions" Version="1.0.11" UpgradeCode="21379429-9f0c-432d-bff1-101e77fc02c1">
-    <UI>
-      <UIRef Id="ProductUI"/>
-    </UI>
+    <ui:UI>
+      <ui:UIRef Id="ProductUI"/>
+    </ui:UI>
     <Property Id="INSTALLDESKTOPSHORTCUT" Value="1"/>
     <Property Id="INSTALLSTARTMENUSHORTCUT" Value="1"/>
     <Property Id="LAUNCHAPPONEXIT" Value="0"/>
@@ -1602,8 +1602,8 @@
     <Property Id="ARPPRODUCTICON" Value="ProductIcon"/>
   </Package>
   <Fragment>
-    <UI Id="ProductUI">
-      <UIRef Id="WixUI_InstallDir"/>
+    <ui:UI Id="ProductUI">
+      <ui:UIRef Id="WixUI_InstallDir"/>
       <ui:Dialog Id="InstallOptionsDialog" Width="370" Height="270" Title="Installation Options">
         <ui:Control Id="DesktopShortcutCheckbox" Type="CheckBox" X="20" Y="60" Width="330" Height="17" Property="INSTALLDESKTOPSHORTCUT" CheckBoxValue="1" TabSkip="no" Text="Create a shortcut on the desktop"/>
         <ui:Control Id="StartMenuShortcutCheckbox" Type="CheckBox" X="20" Y="80" Width="330" Height="17" Property="INSTALLSTARTMENUSHORTCUT" CheckBoxValue="1" Text="Create a shortcut in the Start Menu"/>
@@ -1623,6 +1623,6 @@
       <ui:Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Condition="WIXUI_INSTALLDIR_VALID&lt;&gt;&quot;1&quot;"/>
       <ui:Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Condition="WIXUI_INSTALLDIR_VALID=&quot;1&quot;"/>
       <ui:Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg"/>
-    </UI>
+    </ui:UI>
   </Fragment>
 </Wix>

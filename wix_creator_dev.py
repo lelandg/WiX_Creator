@@ -274,11 +274,11 @@ def create_wxs_file(output_dir, options, file_structure):
 
     # Create a new Fragment element to hold custom UI modifications
     fragment = ET.SubElement(wix, "Fragment")
-    fragment_ui = ET.SubElement(fragment, "UI", Id="ProductUI")
+    fragment_ui = ET.SubElement(fragment, ET.QName(UI_NS, "UI"), Id="ProductUI")
 
     # Create the UI element within the package that references our custom UI
-    ui_element = ET.SubElement(package, "UI")
-    ET.SubElement(ui_element, "UIRef", Id="ProductUI")
+    ui_element = ET.SubElement(package, ET.QName(UI_NS, "UI"))
+    ET.SubElement(ui_element, ET.QName(UI_NS, "UIRef"), Id="ProductUI")
 
     # Add UI properties for installation options
     if options['ui_level'] in ['full', 'minimal']:
@@ -302,7 +302,7 @@ def create_wxs_file(output_dir, options, file_structure):
         ET.SubElement(package, "Property", Id="WIXUI_INSTALLDIR", Value="INSTALLDIR")
 
         # Reference the built-in InstallDir UI from our custom UI fragment
-        ET.SubElement(fragment_ui, "UIRef", Id="WixUI_InstallDir")
+        ET.SubElement(fragment_ui, ET.QName(UI_NS, "UIRef"), Id="WixUI_InstallDir")
 
         # Add custom UI dialog for installation options (now under our custom UI fragment)
         dialog = ET.SubElement(fragment_ui, ET.QName(UI_NS, "Dialog"),
