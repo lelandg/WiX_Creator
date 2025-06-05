@@ -1,13 +1,33 @@
   Determining projects to restore...
   All projects are up-to-date for restore.
-D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(10): error WIX0094: The identifier 'WixUI:WixUI_InstallDir' is inaccessible due to its protection level. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
-D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(28): error WIX0094: The identifier 'CustomAction:ui:WixUIValidatePath' could not be found. Ensure you have typed the reference correctly and that all the necessary inputs are provided to the linker. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(9): error WIX0005: The Package element contains an unexpected child element 'WixUIRef'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(11): error WIX0005: The UI element contains an unexpected child element 'Dialog'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(20): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(21): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(22): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(23): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(24): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(25): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(26): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(27): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(28): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(29): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
 
 Build FAILED.
 
-D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(10): error WIX0094: The identifier 'WixUI:WixUI_InstallDir' is inaccessible due to its protection level. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
-D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(28): error WIX0094: The identifier 'CustomAction:ui:WixUIValidatePath' could not be found. Ensure you have typed the reference correctly and that all the necessary inputs are provided to the linker. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(9): error WIX0005: The Package element contains an unexpected child element 'WixUIRef'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(11): error WIX0005: The UI element contains an unexpected child element 'Dialog'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(20): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(21): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(22): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(23): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(24): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(25): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(26): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(27): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(28): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(29): error WIX0005: The UI element contains an unexpected child element 'Publish'. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
     0 Warning(s)
-    2 Error(s)
+    12 Error(s)
 
-Time Elapsed 00:00:00.77
+Time Elapsed 00:00:00.63
