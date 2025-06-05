@@ -272,11 +272,13 @@ def create_wxs_file(output_dir, options, file_structure):
                            Version=options['product_version'],
                            UpgradeCode=options['upgrade_code'])
 
-    # Create a new Fragment element for the custom dialog
+    # Create a new Fragment element to hold custom UI modifications
     fragment = ET.SubElement(wix, "Fragment")
+    fragment_ui = ET.SubElement(fragment, "UI", Id="ProductUI")
 
-    # Create the UI element
+    # Create the UI element within the package that references our custom UI
     ui_element = ET.SubElement(package, "UI")
+    ET.SubElement(ui_element, "UIRef", Id="ProductUI")
 
     # Add UI properties for installation options
     if options['ui_level'] in ['full', 'minimal']:
@@ -299,11 +301,11 @@ def create_wxs_file(output_dir, options, file_structure):
         # Add WIXUI_INSTALLDIR property for InstallDirDlg
         ET.SubElement(package, "Property", Id="WIXUI_INSTALLDIR", Value="INSTALLDIR")
 
-        # Reference the built-in InstallDir UI
-        ET.SubElement(ui_element, "UIRef", Id="WixUI_InstallDir")
+        # Reference the built-in InstallDir UI from our custom UI fragment
+        ET.SubElement(fragment_ui, "UIRef", Id="WixUI_InstallDir")
 
-        # Add custom UI dialog for installation options (now under Fragment)
-        dialog = ET.SubElement(fragment, ET.QName(UI_NS, "Dialog"),
+        # Add custom UI dialog for installation options (now under our custom UI fragment)
+        dialog = ET.SubElement(fragment_ui, ET.QName(UI_NS, "Dialog"),
                      Id="InstallOptionsDialog",
                      Width="370",
                      Height="270",
@@ -387,69 +389,63 @@ def create_wxs_file(output_dir, options, file_structure):
 
         # Publish elements for InstallOptionsDialog navigation (now children of the Dialog)
         ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
-                     Dialog="InstallOptionsDialog",
                      Control="Back",
                      Event="NewDialog",
                      Value="LicenseAgreementDlg")
         ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
-                     Dialog="InstallOptionsDialog",
                      Control="Next",
                      Event="NewDialog",
                      Value="InstallDirDlg")
         ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
-                     Dialog="InstallOptionsDialog",
                      Control="Cancel",
                      Event="SpawnDialog",
                      Value="CancelDlg")
 
-        # Create InstallUISequence element (now under Package)
-        install_ui_sequence = ET.SubElement(package, "InstallUISequence")
-
-        # Publish elements for navigating to InstallOptionsDialog (remain in InstallUISequence)
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        # Publish elements for navigating to InstallOptionsDialog (added to custom UI fragment)
+        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
                      Dialog="LicenseAgreementDlg",
                      Control="Next",
                      Event="NewDialog",
                      Value="InstallOptionsDialog")
 
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
                      Dialog="InstallDirDlg",
                      Control="Back",
                      Event="NewDialog",
                      Value="InstallOptionsDialog")
 
         # Add events for InstallDirDlg buttons to fix ICE17 errors
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
                      Dialog="InstallDirDlg",
                      Control="Next",
                      Event="SetTargetPath",
                      Value="[WIXUI_INSTALLDIR]")
 
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
                      Dialog="InstallDirDlg",
                      Control="Next",
                      Event="DoAction",
                      Value="WixUIValidatePath",
                      Condition="NOT WIXUI_DONTVALIDATEPATH")
 
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
                      Dialog="InstallDirDlg",
-                     Control="Next", 
-                     Event="SpawnDialog", 
+                     Control="Next",
+                     Event="SpawnDialog",
                      Value="InvalidDirDlg",
                      Condition="WIXUI_INSTALLDIR_VALID<>\"1\"")
 
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
                      Dialog="InstallDirDlg",
-                     Control="Next", 
-                     Event="NewDialog", 
+                     Control="Next",
+                     Event="NewDialog",
                      Value="VerifyReadyDlg",
                      Condition="WIXUI_INSTALLDIR_VALID=\"1\"")
 
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
                      Dialog="InstallDirDlg",
-                     Control="ChangeFolder", 
-                     Event="SpawnDialog", 
+                     Control="ChangeFolder",
+                     Event="SpawnDialog",
                      Value="BrowseDlg")
 
     # Create main component group
