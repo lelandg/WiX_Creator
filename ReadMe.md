@@ -58,9 +58,14 @@ If you run the script from the project directory, it will automatically look for
 
 It does this magic by looking for "last_project.json" in the current directory, which is created by the script when it runs. This file is always identical to the last generated "<Product Name>.json" file, so you can use it to quickly rerun the script without needing to specify all parameters again.
 
-Then build the installer using the generated WiX XML file:
+Then build the installer using the generated project file:
 ```powershell
-wix build -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext .\Installer\MeshForge.wxs
+dotnet build .\Installer\MeshForge.wixproj
 ```
 
-This command includes the necessary UI and Util extensions required for the installer. Without these extensions, you may encounter errors related to unhandled extension elements or illegal identifiers with namespace prefixes.
+You can also use `wix build` if you prefer:
+```powershell
+wix build .\Installer\MeshForge.wixproj
+```
+
+Both commands automatically include the required UI and Util extensions when using the project file and avoid preprocessor variable errors.
