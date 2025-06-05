@@ -161,3 +161,8 @@ cython_debug/
 #.idea/
 wix_creator_pro.py
 last_project.json
+MeshForge_App/bin/library.dll
+MeshForge_App/bin/MeshForge.exe
+MeshForge_App/data/config.json
+MeshForge_App/data/subfolder/asset.dat
+MeshForge_App/docs/readme.txt
