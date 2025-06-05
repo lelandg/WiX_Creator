@@ -1,8 +1,2 @@
-D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1607) : error WIX0005: The UI element contains an unexpected child element 'Dialog'.
-D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1619) : error WIX0005: The UI element contains an unexpected child element 'Publish'.
-D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1620) : error WIX0005: The UI element contains an unexpected child element 'Publish'.
-D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1621) : error WIX0005: The UI element contains an unexpected child element 'Publish'.
-D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1622) : error WIX0005: The UI element contains an unexpected child element 'Publish'.
-D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1623) : error WIX0005: The UI element contains an unexpected child element 'Publish'.
-D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1624) : error WIX0005: The UI element contains an unexpected child element 'Publish'.
-D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1625) : error WIX0005: The UI element contains an unexpected child element 'Publish'.
+D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(4) : error WIX0005: The Package element contains an unexpected child element 'UI'.
+D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wxs(1605) : error WIX0005: The Fragment element contains an unexpected child element 'UI'.
