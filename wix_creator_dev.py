@@ -293,9 +293,8 @@ def create_wxs_file(output_dir, options, file_structure):
         # Add WIXUI_INSTALLDIR property for InstallDirDlg
         ET.SubElement(package, "Property", Id="WIXUI_INSTALLDIR", Value="INSTALLDIR")
 
-        # Add UI reference for the built-in InstallDir dialogs
-        # Reference the built-in InstallDir UI from the WiX UI extension
-        ET.SubElement(package, ET.QName(UI_NS, "WixUIRef"), Id="WixUI_InstallDir")
+        # Reference the built-in InstallDir UI
+        ET.SubElement(package, "UIRef", Id="WixUI_InstallDir")
 
         # Create an element to hold custom UI modifications
         ui_element = ET.SubElement(package, "UI")
