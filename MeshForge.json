@@ -1,0 +1,21 @@
+{
+    "product_name": "MeshForge",
+    "product_version": "1.0.11",
+    "manufacturer": "Leland Green Productions",
+    "product_id": "c7f3dc93-ed35-4978-96c4-80653c699108",
+    "upgrade_code": "21379429-9f0c-432d-bff1-101e77fc02c1",
+    "install_dir_name": "MeshForge",
+    "ui_level": "full",
+    "license_file": "",
+    "banner_image": "../Resources/Meshforge Splash.png",
+    "dialog_image": "../Resources/Meshforge.ico",
+    "icon_file": "../Resources/Meshforge.ico",
+    "add_desktop_shortcut": true,
+    "add_start_menu_shortcut": true,
+    "shortcut_folder_name": "Leland Green Productions",
+    "shortcut_all_users": false,
+    "run_after_install": false,
+    "add_to_path": false,
+    "file_associations": "",
+    "publish_dir": "D:\\Documents\\Code\\GitHub\\.Net\\MeshForge\\bin\\Release\\net8.0-windows\\win-x64\\publish"
+}

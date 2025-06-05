@@ -23,14 +23,14 @@ dotnet add package WixToolset.BuildTools --version 4.* .\MeshForge.csproj
 Use your preferred method to install WiX Toolset v6.0.0.6149, which is required for building the installer. Here are some options:
 
 **1. Using Winget** (Windows 10/11)  
-    ```powershell
-    winget install --id WiX.Toolset --version 6.0.0.6149
-    ```
+```powershell
+winget install --id WiX.Toolset --version 6.0.0.6149
+```
 
 **2. Using Chocolatey**  
-    ```powershell
-    choco install wix.toolset --version=6.0.0.6149 -y
-    ```
+```powershell
+choco install wix.toolset --version=6.0.0.6149 -y
+```
 
 **3. Manual download and silent install**  
 ```powershell
@@ -60,5 +60,7 @@ It does this magic by looking for "last_project.json" in the current directory, 
 
 Then build the installer using the generated WiX XML file:
 ```powershell
-wix build .\Installer\MeshForge.wxs
+wix build -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext .\Installer\MeshForge.wxs
 ```
+
+This command includes the necessary UI and Util extensions required for the installer. Without these extensions, you may encounter errors related to unhandled extension elements or illegal identifiers with namespace prefixes.
