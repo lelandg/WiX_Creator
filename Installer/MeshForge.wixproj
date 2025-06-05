@@ -3,10 +3,7 @@
   <PropertyGroup>
     <OutputName>MeshForge</OutputName>
     <OutputType>Package</OutputType>
-    <Configuration>Release</Configuration>
-    <Platform>x64</Platform>
-    <OutputPath>bin\$(Configuration)\</OutputPath>
-    <ProjectDir>/app/Installer</ProjectDir>
+    <OutputPath>bin\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="MeshForge.wxs"/>
