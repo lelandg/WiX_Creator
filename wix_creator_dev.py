@@ -738,6 +738,8 @@ def create_wixproj_file(output_dir, options):
     property_group = ET.SubElement(project, "PropertyGroup")
     ET.SubElement(property_group, "OutputName").text = options['product_name']
     ET.SubElement(property_group, "OutputType").text = "Package"
+    # Use a fixed output path so wix build does not require $(Configuration)
+    ET.SubElement(property_group, "OutputPath").text = "bin\\"
 
     # Compile item for main wxs file
     item_group = ET.SubElement(project, "ItemGroup")
