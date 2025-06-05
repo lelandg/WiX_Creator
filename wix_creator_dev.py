@@ -523,72 +523,49 @@ def create_wxs_file(output_dir, options, file_structure):
             component_id = f"Component_{component_id_counter}"
             component_id_counter += 1
 
-            # Set appropriate scope for the component
-            # Check if this component will have shortcuts (and thus registry keys as KeyPath)
-            will_have_shortcuts = file_info['name'].endswith('.exe') and (options.get('add_desktop_shortcut', False) or options.get('add_start_menu_shortcut', False))
+            is_main_exe_component = False
+            current_file_id_str = f"File_{file_id_counter}" # This is the ID for the current file
 
-            # Generate a GUID for components that will have registry keys as KeyPath
-            component_guid = str(uuid.uuid4()) if will_have_shortcuts else "*"
+            if file_info['name'].endswith('.exe') and main_exe_id is None:
+                main_exe_id = current_file_id_str # Assign the correct file_id
+                is_main_exe_component = True
 
-            if options.get('shortcut_all_users', False):
-                component = ET.SubElement(components, "Component", 
-                                         Id=component_id, 
-                                         Directory=current_dir.get("Id"),
-                                         Guid=component_guid,
-                                         Scope="perMachine")
-            else:
-                component = ET.SubElement(components, "Component", 
-                                         Id=component_id, 
-                                         Directory=current_dir.get("Id"),
-                                         Guid=component_guid)
+            # Generate a GUID for the main EXE component, others can use "*"
+            component_guid = str(uuid.uuid4()) if is_main_exe_component else "*"
 
-            file_id = f"File_{file_id_counter}"
-            file_id_counter += 1
+            scope_attributes = {}
+            if options.get('shortcut_all_users', False) : # Apply to all components for consistency
+                scope_attributes["Scope"] = "perMachine"
 
-            file_element = ET.SubElement(component, "File", 
-                                        Id=file_id,
-                                        Source=file_info['path'],
-                                        Name=file_info['name'])
+            component = ET.SubElement(components, "Component",
+                                     Id=component_id,
+                                     Directory=current_dir.get("Id"),
+                                     Guid=component_guid,
+                                     **scope_attributes)
+
+            # file_id is now current_file_id_str, declared earlier
+            file_id_counter += 1 # Increment for the next file
+
+            file_attributes = {
+                "Id": current_file_id_str, # Use the correct ID
+                "Source": file_info['path'],
+                "Name": file_info['name']
+            }
+            if is_main_exe_component:
+                # The main executable's File element is marked as KeyPath="yes".
+                # This is crucial because its component has a stable GUID and might be referenced
+                # by other features (like shortcuts). The KeyPath tells Windows Installer
+                # what file/registry key is the "key" for this component's installation status.
+                # A stable GUID is important for upgrades and patching.
+                file_attributes["KeyPath"] = "yes"
+
+            file_element = ET.SubElement(component, "File", **file_attributes)
 
             # Add shortcut for executable files
             if file_info['name'].endswith('.exe'):
-                # Store the first executable as the main one
-                if main_exe_id is None:
-                    main_exe_id = file_id
-
-                # Add registry key as KeyPath for components with shortcuts
-                if options.get('add_desktop_shortcut', False) or options.get('add_start_menu_shortcut', False):
-                    # Add registry key as KeyPath
-                    ET.SubElement(component, "RegistryValue",
-                                 Root="HKCU",
-                                 Key=f"Software\\{options['manufacturer']}\\{options['product_name']}",
-                                 Name=f"installed_{file_id}",
-                                 Type="integer",
-                                 Value="1",
-                                 KeyPath="yes")
-
-                # Desktop shortcut - add based on options
-                if options.get('add_desktop_shortcut', False):
-                    ET.SubElement(component, "Shortcut",
-                                 Id=f"DesktopShortcut_{file_id}",
-                                 Directory="DesktopFolder",
-                                 Name=options['product_name'],
-                                 WorkingDirectory="INSTALLDIR",
-                                 IconIndex="0",
-                                 Advertise="no")
-
-                # Start menu shortcut - add based on options
-                # Determine the target directory for the shortcut
-                shortcut_dir = "ShortcutFolder" if options.get('shortcut_folder_name') else "ProgramMenuFolder"
-
-                if options.get('add_start_menu_shortcut', False):
-                    ET.SubElement(component, "Shortcut",
-                                 Id=f"StartMenuShortcut_{file_id}",
-                                 Directory=shortcut_dir,
-                                 Name=options['product_name'],
-                                 WorkingDirectory="INSTALLDIR",
-                                 IconIndex="0",
-                                 Advertise="no")
+                # Store the first executable as the main one (already done above)
+                # if main_exe_id is None:
+                #    main_exe_id = file_id
 
                 # Add file associations if specified
                 if options.get('file_associations'):
@@ -607,18 +584,6 @@ def create_wxs_file(output_dir, options, file_structure):
                             # Associate extension with ProgId
                             ET.SubElement(prog_id, "Extension", Id=ext_id, ContentType="application/octet-stream")
 
-            # Add to PATH if specified
-            if dir_path == '':  # Only add the main directory to PATH
-                if options.get('add_to_path', False):
-                    ET.SubElement(component, "Environment", 
-                                 Id="PATH", 
-                                 Name="PATH", 
-                                 Value="[INSTALLDIR]", 
-                                 Permanent="no", 
-                                 Part="last", 
-                                 Action="set", 
-                                 System="yes")
-
     # Add icon if provided
     if options.get('icon_file'):
         ET.SubElement(package, "Icon", 
@@ -627,6 +592,93 @@ def create_wxs_file(output_dir, options, file_structure):
         ET.SubElement(package, "Property", 
                      Id="ARPPRODUCTICON", 
                      Value="ProductIcon")
+
+    # Conditional Feature Components (Shortcuts, PATH)
+    # These features are placed in separate components to allow conditional installation
+    # based on user selections in the InstallOptionsDialog.
+    # Each component uses a <Condition> element that checks a WiX property (e.g., INSTALLDESKTOPSHORTCUT).
+    # This property is set by the corresponding checkbox in the UI.
+    # Components that don't install files directly (like these, which manage shortcuts or registry entries)
+    # must have a KeyPath defined, typically a RegistryValue, to ensure they are correctly installed/uninstalled.
+
+    # Create Desktop Shortcut Component
+    if options.get('add_desktop_shortcut') and main_exe_id:
+        desktop_shortcut_comp = ET.SubElement(components, "Component",
+                                              Id="DesktopShortcutComponent",
+                                              Directory="DesktopFolder", # Standard directory for desktop shortcuts
+                                              Guid=str(uuid.uuid4())) # Unique GUID for this component
+        # Create the shortcut itself, targeting the main executable
+        ET.SubElement(desktop_shortcut_comp, "Shortcut",
+                      Id="DesktopShortcut",
+                      Name=options['product_name'],
+                      Target=f"[#{main_exe_id}]", # Points to the File Id of the main EXE
+                      WorkingDirectory="INSTALLDIR",
+                      IconIndex="0")
+        # Condition for installation: The INSTALLDESKTOPSHORTCUT property must be "1"
+        # This property is set by the checkbox in InstallOptionsDialog.
+        ET.SubElement(desktop_shortcut_comp, "Condition").text = "INSTALLDESKTOPSHORTCUT=\"1\""
+        # KeyPath for the component: A registry value is created to mark the installation state.
+        # This is necessary because the component doesn't install a file directly into DesktopFolder.
+        ET.SubElement(desktop_shortcut_comp, "RegistryValue",
+                      Root="HKCU", # Per-user registry key
+                      Key=f"Software\\{options['manufacturer']}\\{options['product_name']}",
+                      Name="DesktopShortcutInstalled",
+                      Type="integer",
+                      Value="1",
+                      KeyPath="yes")
+
+    # Create Start Menu Shortcut Component
+    if options.get('add_start_menu_shortcut') and main_exe_id:
+        # Determine the directory for the start menu shortcut (custom folder or general program menu)
+        start_menu_shortcut_dir = "ShortcutFolder" if options.get('shortcut_folder_name') else "ProgramMenuFolder"
+        start_menu_shortcut_comp = ET.SubElement(components, "Component",
+                                                 Id="StartMenuShortcutComponent",
+                                                 Directory=start_menu_shortcut_dir,
+                                                 Guid=str(uuid.uuid4())) # Unique GUID
+        # Create the shortcut
+        ET.SubElement(start_menu_shortcut_comp, "Shortcut",
+                      Id="StartMenuShortcut",
+                      Name=options['product_name'],
+                      Target=f"[#{main_exe_id}]", # Points to the main EXE
+                      WorkingDirectory="INSTALLDIR",
+                      IconIndex="0")
+        # Condition for installation, similar to the desktop shortcut
+        ET.SubElement(start_menu_shortcut_comp, "Condition").text = "INSTALLSTARTMENUSHORTCUT=\"1\""
+        # KeyPath for the component, using a registry value
+        ET.SubElement(start_menu_shortcut_comp, "RegistryValue",
+                      Root="HKCU", # Per-user registry key
+                      Key=f"Software\\{options['manufacturer']}\\{options['product_name']}",
+                      Name="StartMenuShortcutInstalled",
+                      Type="integer",
+                      Value="1",
+                      KeyPath="yes")
+
+    # Create Environment Path Component
+    if options.get('add_to_path'):
+        env_path_comp = ET.SubElement(components, "Component",
+                                      Id="EnvironmentPathComponent",
+                                      Directory="INSTALLDIR",  # The component is associated with INSTALLDIR
+                                      Guid=str(uuid.uuid4())) # Unique GUID
+        # The Environment element modifies the system PATH
+        ET.SubElement(env_path_comp, "Environment",
+                      Id="EnvironmentPath",
+                      Name="PATH", # Modifying the PATH variable
+                      Value="[INSTALLDIR]", # Adding the installation directory
+                      Permanent="no", # Do not make permanent, will be removed on uninstall
+                      Part="last", # Append to the PATH
+                      Action="set", # Set the environment variable
+                      System="yes") # Modify the system PATH (requires elevation)
+        # Condition for installation, based on the ADDTOPATH property
+        ET.SubElement(env_path_comp, "Condition").text = "ADDTOPATH=\"1\""
+        # KeyPath for the component. Since Environment elements are declarative,
+        # a RegistryValue is used to ensure the component is properly managed.
+        ET.SubElement(env_path_comp, "RegistryValue",
+                      Root="HKLM", # HKEY_LOCAL_MACHINE for system PATH modification
+                      Key=f"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+                      Name=f"Path_{options['product_name']}", # Unique name for registry value
+                      Type="string",
+                      Value="[INSTALLDIR]",
+                      KeyPath="yes")
 
     # Add custom actions for UI mode
     if options['ui_level'] in ['full', 'minimal'] and main_exe_id and options.get('run_after_install', False):
