@@ -731,32 +731,22 @@ def create_wixproj_file(output_dir, options):
     """Create the .wixproj file for the WiX project."""
     wixproj_path = os.path.join(output_dir, f"{options['product_name']}.wixproj")
 
-    # Create the root element
-    project = ET.Element("Project", 
-                        DefaultTargets="Build",
-                        xmlns="http://schemas.microsoft.com/developer/msbuild/2003",
-                        ToolsVersion="4.0")
+    # Use the WiX SDK style project so "wix build" works correctly
+    project = ET.Element("Project", Sdk="WixToolset.Sdk/6.0.0")
 
-    # Add property group
+    # Minimal property group
     property_group = ET.SubElement(project, "PropertyGroup")
-    ET.SubElement(property_group, "Configuration").text = "Debug"
-    ET.SubElement(property_group, "Platform").text = "x86"
-    ET.SubElement(property_group, "ProductVersion").text = options['product_version']
-    ET.SubElement(property_group, "SchemaVersion").text = "2.0"
     ET.SubElement(property_group, "OutputName").text = options['product_name']
     ET.SubElement(property_group, "OutputType").text = "Package"
 
-    # Add item group for project references
+    # Compile item for main wxs file
     item_group = ET.SubElement(project, "ItemGroup")
-    compile = ET.SubElement(item_group, "Compile", Include=f"{options['product_name']}.wxs")
+    ET.SubElement(item_group, "Compile", Include=f"{options['product_name']}.wxs")
 
-    # Add item group for WiX extensions
+    # Always include UI and Util extensions
     extensions_group = ET.SubElement(project, "ItemGroup")
     ET.SubElement(extensions_group, "WixExtension", Include="WixToolset.UI.wixext")
     ET.SubElement(extensions_group, "WixExtension", Include="WixToolset.Util.wixext")
-
-    # Add import for WiX targets
-    ET.SubElement(project, "Import", Project="$(WixTargetsPath)", Condition="Exists('$(WixTargetsPath)')")
 
     # Write the XML to file with proper formatting
     rough_string = ET.tostring(project, 'utf-8')
