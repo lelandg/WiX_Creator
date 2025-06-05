@@ -321,6 +321,12 @@ def create_wixproj_file(output_dir, options):
     property_group = ET.SubElement(project, "PropertyGroup")
     ET.SubElement(property_group, "OutputName").text = options['product_name']
     ET.SubElement(property_group, "OutputType").text = "Package"
+    # Add standard MSBuild properties
+    ET.SubElement(property_group, "Configuration").text = "Release" # Default to Release
+    ET.SubElement(property_group, "Platform").text = "x64" # Default to x64
+    # OutputPath is preferred over BuildOutputDirectory for SDK-style projects
+    ET.SubElement(property_group, "OutputPath").text = "bin\\$(Configuration)\\"
+    ET.SubElement(property_group, "ProjectDir").text = output_dir
 
     # Include the main .wxs file
     item_group = ET.SubElement(project, "ItemGroup")
