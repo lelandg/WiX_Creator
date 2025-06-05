@@ -301,8 +301,6 @@ def create_wxs_file(output_dir, options, file_structure):
 
         # Reference the built-in InstallDir UI
         ET.SubElement(ui_element, "UIRef", Id="WixUI_InstallDir")
-        # Reference the custom dialog defined in the Fragment
-        ET.SubElement(ui_element, ET.QName(UI_NS, "DialogRef"), Id="InstallOptionsDialog")
 
         # Add custom UI dialog for installation options (now under Fragment)
         dialog = ET.SubElement(fragment, ET.QName(UI_NS, "Dialog"),
