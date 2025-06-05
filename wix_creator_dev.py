@@ -734,10 +734,7 @@ def create_wixproj_file(output_dir, options):
     # Use the WiX SDK style project so "wix build" works correctly
     project = ET.Element(
         "Project",
-        {
-            "Sdk": "WixToolset.Sdk/6.0.0",
-            "xmlns": "http://schemas.microsoft.com/developer/msbuild/2003",
-        },
+        {"Sdk": "WixToolset.Sdk/6.0.0"},
     )
 
     # Minimal property group
