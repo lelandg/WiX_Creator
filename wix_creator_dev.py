@@ -272,6 +272,9 @@ def create_wxs_file(output_dir, options, file_structure):
                            Version=options['product_version'],
                            UpgradeCode=options['upgrade_code'])
 
+    # Create a new Fragment element for the custom dialog
+    fragment = ET.SubElement(wix, "Fragment")
+
     # Create the UI element
     ui_element = ET.SubElement(package, "UI")
 
@@ -298,9 +301,11 @@ def create_wxs_file(output_dir, options, file_structure):
 
         # Reference the built-in InstallDir UI
         ET.SubElement(ui_element, "UIRef", Id="WixUI_InstallDir")
+        # Reference the custom dialog defined in the Fragment
+        ET.SubElement(ui_element, ET.QName(UI_NS, "DialogRef"), Id="InstallOptionsDialog")
 
-        # Add custom UI dialog for installation options
-        dialog = ET.SubElement(ui_element, ET.QName(UI_NS, "Dialog"),
+        # Add custom UI dialog for installation options (now under Fragment)
+        dialog = ET.SubElement(fragment, ET.QName(UI_NS, "Dialog"),
                      Id="InstallOptionsDialog",
                      Width="370",
                      Height="270",
@@ -382,22 +387,27 @@ def create_wxs_file(output_dir, options, file_structure):
                      Cancel="yes", 
                      Text="Cancel")
 
-        # Create InstallUISequence element
-        install_ui_sequence = ET.SubElement(ui_element, "InstallUISequence")
-
-        # Insert the dialog in the UI sequence
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        # Publish elements for InstallOptionsDialog navigation (now children of the Dialog)
+        ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
                      Dialog="InstallOptionsDialog",
-                     Control="Back", 
-                     Event="NewDialog", 
+                     Control="Back",
+                     Event="NewDialog",
                      Value="LicenseAgreementDlg")
-
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
                      Dialog="InstallOptionsDialog",
-                     Control="Next", 
-                     Event="NewDialog", 
+                     Control="Next",
+                     Event="NewDialog",
                      Value="InstallDirDlg")
+        ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
+                     Dialog="InstallOptionsDialog",
+                     Control="Cancel",
+                     Event="SpawnDialog",
+                     Value="CancelDlg")
 
+        # Create InstallUISequence element (now under Package)
+        install_ui_sequence = ET.SubElement(package, "InstallUISequence")
+
+        # Publish elements for navigating to InstallOptionsDialog (remain in InstallUISequence)
         ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
                      Dialog="LicenseAgreementDlg",
                      Control="Next",
@@ -409,13 +419,6 @@ def create_wxs_file(output_dir, options, file_structure):
                      Control="Back",
                      Event="NewDialog",
                      Value="InstallOptionsDialog")
-
-        # Add Cancel button event
-        ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
-                     Dialog="InstallOptionsDialog",
-                     Control="Cancel",
-                     Event="SpawnDialog",
-                     Value="CancelDlg")
 
         # Add events for InstallDirDlg buttons to fix ICE17 errors
         ET.SubElement(install_ui_sequence, ET.QName(UI_NS, "Publish"),
@@ -614,9 +617,6 @@ def create_wxs_file(output_dir, options, file_structure):
                       Target=f"[#{main_exe_id}]", # Points to the File Id of the main EXE
                       WorkingDirectory="INSTALLDIR",
                       IconIndex="0")
-        # Condition for installation: The INSTALLDESKTOPSHORTCUT property must be "1"
-        # This property is set by the checkbox in InstallOptionsDialog.
-        ET.SubElement(desktop_shortcut_comp, "Condition").text = "INSTALLDESKTOPSHORTCUT=\"1\""
         # KeyPath for the component: A registry value is created to mark the installation state.
         # This is necessary because the component doesn't install a file directly into DesktopFolder.
         ET.SubElement(desktop_shortcut_comp, "RegistryValue",
@@ -642,8 +642,6 @@ def create_wxs_file(output_dir, options, file_structure):
                       Target=f"[#{main_exe_id}]", # Points to the main EXE
                       WorkingDirectory="INSTALLDIR",
                       IconIndex="0")
-        # Condition for installation, similar to the desktop shortcut
-        ET.SubElement(start_menu_shortcut_comp, "Condition").text = "INSTALLSTARTMENUSHORTCUT=\"1\""
         # KeyPath for the component, using a registry value
         ET.SubElement(start_menu_shortcut_comp, "RegistryValue",
                       Root="HKCU", # Per-user registry key
@@ -668,8 +666,6 @@ def create_wxs_file(output_dir, options, file_structure):
                       Part="last", # Append to the PATH
                       Action="set", # Set the environment variable
                       System="yes") # Modify the system PATH (requires elevation)
-        # Condition for installation, based on the ADDTOPATH property
-        ET.SubElement(env_path_comp, "Condition").text = "ADDTOPATH=\"1\""
         # KeyPath for the component. Since Environment elements are declarative,
         # a RegistryValue is used to ensure the component is properly managed.
         ET.SubElement(env_path_comp, "RegistryValue",
