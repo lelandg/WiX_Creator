@@ -16,10 +16,8 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom
 
-UI_NS = "http://wixtoolset.org/schemas/v4/wxs/ui"
 UTIL_NS = "http://wixtoolset.org/schemas/v4/wxs/util"
 
-ET.register_namespace('ui', UI_NS)
 ET.register_namespace('util', UTIL_NS)
 
 
@@ -274,11 +272,10 @@ def create_wxs_file(output_dir, options, file_structure):
 
     # Create a new Fragment element to hold custom UI modifications
     fragment = ET.SubElement(wix, "Fragment")
-    fragment_ui = ET.SubElement(fragment, ET.QName(UI_NS, "UI"), Id="ProductUI")
+    fragment_ui = ET.SubElement(fragment, "UI", Id="ProductUI")
 
     # Create the UI element within the package that references our custom UI
-    ui_element = ET.SubElement(package, ET.QName(UI_NS, "UI"))
-    ET.SubElement(ui_element, ET.QName(UI_NS, "UIRef"), Id="ProductUI")
+    ET.SubElement(package, "UIRef", Id="ProductUI")
 
     # Add UI properties for installation options
     if options['ui_level'] in ['full', 'minimal']:
@@ -302,17 +299,17 @@ def create_wxs_file(output_dir, options, file_structure):
         ET.SubElement(package, "Property", Id="WIXUI_INSTALLDIR", Value="INSTALLDIR")
 
         # Reference the built-in InstallDir UI from our custom UI fragment
-        ET.SubElement(fragment_ui, ET.QName(UI_NS, "UIRef"), Id="WixUI_InstallDir")
+        ET.SubElement(fragment_ui, "UIRef", Id="WixUI_InstallDir")
 
         # Add custom UI dialog for installation options (now under our custom UI fragment)
-        dialog = ET.SubElement(fragment_ui, ET.QName(UI_NS, "Dialog"),
+        dialog = ET.SubElement(fragment_ui, "Dialog",
                      Id="InstallOptionsDialog",
                      Width="370",
                      Height="270",
                      Title="Installation Options")
 
         # Add checkboxes for options
-        ET.SubElement(dialog, ET.QName(UI_NS, "Control"),
+        ET.SubElement(dialog, "Control",
                      Id="DesktopShortcutCheckbox",
                      Type="CheckBox",
                      X="20", 
@@ -324,7 +321,7 @@ def create_wxs_file(output_dir, options, file_structure):
                      TabSkip="no",
                      Text="Create a shortcut on the desktop")
 
-        ET.SubElement(dialog, ET.QName(UI_NS, "Control"),
+        ET.SubElement(dialog, "Control",
                      Id="StartMenuShortcutCheckbox",
                      Type="CheckBox", 
                      X="20", 
@@ -335,7 +332,7 @@ def create_wxs_file(output_dir, options, file_structure):
                      CheckBoxValue="1", 
                      Text="Create a shortcut in the Start Menu")
 
-        ET.SubElement(dialog, ET.QName(UI_NS, "Control"),
+        ET.SubElement(dialog, "Control",
                      Id="AddToPathCheckbox",
                      Type="CheckBox", 
                      X="20", 
@@ -346,7 +343,7 @@ def create_wxs_file(output_dir, options, file_structure):
                      CheckBoxValue="1", 
                      Text="Add application directory to PATH")
 
-        ET.SubElement(dialog, ET.QName(UI_NS, "Control"),
+        ET.SubElement(dialog, "Control",
                      Id="LaunchAppCheckbox",
                      Type="CheckBox", 
                      X="20", 
@@ -358,7 +355,7 @@ def create_wxs_file(output_dir, options, file_structure):
                      Text="Launch application after installation")
 
         # Add navigation buttons
-        ET.SubElement(dialog, ET.QName(UI_NS, "Control"),
+        ET.SubElement(dialog, "Control",
                      Id="Back",
                      Type="PushButton",
                      X="180", 
@@ -367,7 +364,7 @@ def create_wxs_file(output_dir, options, file_structure):
                      Height="17", 
                      Text="Back")
 
-        ET.SubElement(dialog, ET.QName(UI_NS, "Control"),
+        ET.SubElement(dialog, "Control",
                      Id="Next",
                      Type="PushButton", 
                      X="236", 
@@ -377,7 +374,7 @@ def create_wxs_file(output_dir, options, file_structure):
                      Default="yes", 
                      Text="Next")
 
-        ET.SubElement(dialog, ET.QName(UI_NS, "Control"),
+        ET.SubElement(dialog, "Control",
                      Id="Cancel",
                      Type="PushButton", 
                      X="304", 
@@ -388,61 +385,61 @@ def create_wxs_file(output_dir, options, file_structure):
                      Text="Cancel")
 
         # Publish elements for InstallOptionsDialog navigation (now children of the Dialog)
-        ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(dialog, "Publish",
                      Control="Back",
                      Event="NewDialog",
                      Value="LicenseAgreementDlg")
-        ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(dialog, "Publish",
                      Control="Next",
                      Event="NewDialog",
                      Value="InstallDirDlg")
-        ET.SubElement(dialog, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(dialog, "Publish",
                      Control="Cancel",
                      Event="SpawnDialog",
                      Value="CancelDlg")
 
         # Publish elements for navigating to InstallOptionsDialog (added to custom UI fragment)
-        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, "Publish",
                      Dialog="LicenseAgreementDlg",
                      Control="Next",
                      Event="NewDialog",
                      Value="InstallOptionsDialog")
 
-        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, "Publish",
                      Dialog="InstallDirDlg",
                      Control="Back",
                      Event="NewDialog",
                      Value="InstallOptionsDialog")
 
         # Add events for InstallDirDlg buttons to fix ICE17 errors
-        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, "Publish",
                      Dialog="InstallDirDlg",
                      Control="Next",
                      Event="SetTargetPath",
                      Value="[WIXUI_INSTALLDIR]")
 
-        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, "Publish",
                      Dialog="InstallDirDlg",
                      Control="Next",
                      Event="DoAction",
                      Value="WixUIValidatePath",
                      Condition="NOT WIXUI_DONTVALIDATEPATH")
 
-        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, "Publish",
                      Dialog="InstallDirDlg",
                      Control="Next",
                      Event="SpawnDialog",
                      Value="InvalidDirDlg",
                      Condition="WIXUI_INSTALLDIR_VALID<>\"1\"")
 
-        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, "Publish",
                      Dialog="InstallDirDlg",
                      Control="Next",
                      Event="NewDialog",
                      Value="VerifyReadyDlg",
                      Condition="WIXUI_INSTALLDIR_VALID=\"1\"")
 
-        ET.SubElement(fragment_ui, ET.QName(UI_NS, "Publish"),
+        ET.SubElement(fragment_ui, "Publish",
                      Dialog="InstallDirDlg",
                      Control="ChangeFolder",
                      Event="SpawnDialog",
