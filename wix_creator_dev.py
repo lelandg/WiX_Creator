@@ -732,7 +732,13 @@ def create_wixproj_file(output_dir, options):
     wixproj_path = os.path.join(output_dir, f"{options['product_name']}.wixproj")
 
     # Use the WiX SDK style project so "wix build" works correctly
-    project = ET.Element("Project", Sdk="WixToolset.Sdk/6.0.0")
+    project = ET.Element(
+        "Project",
+        {
+            "Sdk": "WixToolset.Sdk/6.0.0",
+            "xmlns": "http://schemas.microsoft.com/developer/msbuild/2003",
+        },
+    )
 
     # Minimal property group
     property_group = ET.SubElement(project, "PropertyGroup")
