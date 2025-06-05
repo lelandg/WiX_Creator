@@ -17,5 +17,5 @@
     "run_after_install": false,
     "add_to_path": false,
     "file_associations": "",
-    "publish_dir": "D:\\Documents\\Code\\GitHub\\.Net\\MeshForge\\bin\\Release\\net8.0-windows\\win-x64\\publish"
+    "publish_dir": "/app/test_publish"
 }

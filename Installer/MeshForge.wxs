@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<Wix xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui" xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="MeshForge" Manufacturer="Leland Green Productions" Version="1.0.11" UpgradeCode="21379429-9f0c-432d-bff1-101e77fc02c1">
+    <UI>
+      <UIRef Id="WixUI_InstallDir"/>
+    </UI>
+    <Property Id="INSTALLDESKTOPSHORTCUT" Value="1"/>
+    <Property Id="INSTALLSTARTMENUSHORTCUT" Value="1"/>
+    <Property Id="LAUNCHAPPONEXIT" Value="0"/>
+    <Property Id="ADDTOPATH" Value="0"/>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
+    <InstallUISequence>
+      <ui:Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallOptionsDialog"/>
+      <ui:Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="InstallOptionsDialog"/>
+      <ui:Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]"/>
+      <ui:Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath" Condition="NOT WIXUI_DONTVALIDATEPATH"/>
+      <ui:Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Condition="WIXUI_INSTALLDIR_VALID&lt;&gt;&quot;1&quot;"/>
+      <ui:Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Condition="WIXUI_INSTALLDIR_VALID=&quot;1&quot;"/>
+      <ui:Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg"/>
+    </InstallUISequence>
+    <ComponentGroup Id="ProductComponents">
+      <Component Id="ShortcutFolderComponent" Directory="ShortcutFolder" Guid="550c4145-38f7-48f8-86ea-c14a365d02c8">
+        <RegistryValue Root="HKCU" Key="Software\Leland Green Productions\MeshForge" Name="installed_shortcut_folder" Type="integer" Value="1" KeyPath="yes"/>
+        <RemoveFolder Id="RemoveShortcutFolder" On="uninstall"/>
+      </Component>
+      <Component Id="Component_1" Directory="INSTALLDIR" Guid="4b24a59a-2463-44a4-a06d-02a37b4d461b">
+        <File Id="File_1" Source="/app/test_publish/TestApp.exe" Name="TestApp.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="Component_2" Directory="INSTALLDIR" Guid="*">
+        <File Id="File_2" Source="/app/test_publish/config.ini" Name="config.ini"/>
+      </Component>
+      <Component Id="Component_3" Directory="Dir_resources" Guid="*">
+        <File Id="File_3" Source="/app/test_publish/resources/data.xml" Name="data.xml"/>
+      </Component>
+      <Component Id="Component_4" Directory="Dir_resources" Guid="*">
+        <File Id="File_4" Source="/app/test_publish/resources/readme.txt" Name="readme.txt"/>
+      </Component>
+      <Component Id="DesktopShortcutComponent" Directory="DesktopFolder" Guid="fc08c2ff-0f11-4c50-9e18-f66bbfe8736b">
+        <Shortcut Id="DesktopShortcut" Name="MeshForge" Target="[#File_1]" WorkingDirectory="INSTALLDIR" IconIndex="0"/>
+        <RegistryValue Root="HKCU" Key="Software\Leland Green Productions\MeshForge" Name="DesktopShortcutInstalled" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+      <Component Id="StartMenuShortcutComponent" Directory="ShortcutFolder" Guid="2f871ec8-8ddf-41dd-8544-0d8e9c79f50e">
+        <Shortcut Id="StartMenuShortcut" Name="MeshForge" Target="[#File_1]" WorkingDirectory="INSTALLDIR" IconIndex="0"/>
+        <RegistryValue Root="HKCU" Key="Software\Leland Green Productions\MeshForge" Name="StartMenuShortcutInstalled" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <Feature Id="ProductFeature" Title="MeshForge" Level="1">
+      <ComponentGroupRef Id="ProductComponents"/>
+    </Feature>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="ManufacturerFolder" Name="Leland Green Productions">
+        <Directory Id="INSTALLDIR" Name="MeshForge">
+          <Directory Id="Dir_resources" Name="resources"/>
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder"/>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ShortcutFolder" Name="Leland Green Productions"/>
+    </StandardDirectory>
+    <Icon Id="ProductIcon" SourceFile="../Resources/Meshforge.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="ProductIcon"/>
+  </Package>
+  <Fragment>
+    <ui:Dialog Id="InstallOptionsDialog" Width="370" Height="270" Title="Installation Options">
+      <ui:Control Id="DesktopShortcutCheckbox" Type="CheckBox" X="20" Y="60" Width="330" Height="17" Property="INSTALLDESKTOPSHORTCUT" CheckBoxValue="1" TabSkip="no" Text="Create a shortcut on the desktop"/>
+      <ui:Control Id="StartMenuShortcutCheckbox" Type="CheckBox" X="20" Y="80" Width="330" Height="17" Property="INSTALLSTARTMENUSHORTCUT" CheckBoxValue="1" Text="Create a shortcut in the Start Menu"/>
+      <ui:Control Id="AddToPathCheckbox" Type="CheckBox" X="20" Y="100" Width="330" Height="17" Property="ADDTOPATH" CheckBoxValue="1" Text="Add application directory to PATH"/>
+      <ui:Control Id="LaunchAppCheckbox" Type="CheckBox" X="20" Y="120" Width="330" Height="17" Property="LAUNCHAPPONEXIT" CheckBoxValue="1" Text="Launch application after installation"/>
+      <ui:Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="Back"/>
+      <ui:Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Next"/>
+      <ui:Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel"/>
+      <ui:Publish Dialog="InstallOptionsDialog" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg"/>
+      <ui:Publish Dialog="InstallOptionsDialog" Control="Next" Event="NewDialog" Value="InstallDirDlg"/>
+      <ui:Publish Dialog="InstallOptionsDialog" Control="Cancel" Event="SpawnDialog" Value="CancelDlg"/>
+    </ui:Dialog>
+  </Fragment>
+</Wix>
