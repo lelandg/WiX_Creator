@@ -1,0 +1,13 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(10): error WIX0094: The identifier 'WixUI:WixUI_InstallDir' is inaccessible due to its protection level. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(28): error WIX0094: The identifier 'CustomAction:ui:WixUIValidatePath' could not be found. Ensure you have typed the reference correctly and that all the necessary inputs are provided to the linker. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+
+Build FAILED.
+
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(10): error WIX0094: The identifier 'WixUI:WixUI_InstallDir' is inaccessible due to its protection level. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+D:\Documents\Code\GitHub\.Net\MeshForge\Installer\MeshForge.wxs(28): error WIX0094: The identifier 'CustomAction:ui:WixUIValidatePath' could not be found. Ensure you have typed the reference correctly and that all the necessary inputs are provided to the linker. [D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj]
+    0 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:00.77
