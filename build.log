@@ -1,3 +1,1 @@
-D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj(3) : error WIX0150: Undefined preprocessor variable '$(Configuration)'.
-D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj(4) : error WIX0150: Undefined preprocessor variable '$(BuildOutputDirectory)'.
-D:\Documents\Code\GitHub\.Net\MeshForge\Installer\Installer.wixproj(12) : error WIX0150: Undefined preprocessor variable '$(ProjectDir)'.
+D:\Documents\Code\GitHub\wix_creator\Installer\MeshForge.wixproj(2) : error WIX0048: The document element name 'Project' is invalid. A WiX source file must use 'Wix' as the document element name.

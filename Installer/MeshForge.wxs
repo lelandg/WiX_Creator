@@ -1,3 +1,4 @@
+<?xml version="1.0" ?>
 <Wix xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui" xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="MeshForge" Manufacturer="Leland Green Productions" Version="1.0.11" UpgradeCode="21379429-9f0c-432d-bff1-101e77fc02c1">
     <UI>
@@ -9,7 +10,7 @@
     <Property Id="ADDTOPATH" Value="0"/>
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
     <ComponentGroup Id="ProductComponents">
-      <Component Id="ShortcutFolderComponent" Directory="ShortcutFolder" Guid="55786f91-f05b-4a01-8936-eccdd9cbcc6e">
+      <Component Id="ShortcutFolderComponent" Directory="ShortcutFolder" Guid="55ab3ac0-ee77-4d7d-901a-b9e608eeb694">
         <RegistryValue Root="HKCU" Key="Software\Leland Green Productions\MeshForge" Name="installed_shortcut_folder" Type="integer" Value="1" KeyPath="yes"/>
         <RemoveFolder Id="RemoveShortcutFolder" On="uninstall"/>
       </Component>
@@ -28,7 +29,7 @@
       <Component Id="Component_5" Directory="INSTALLDIR" Guid="*">
         <File Id="File_5" Source="D:\Documents\Code\GitHub\.Net\MeshForge\bin\Release\net8.0-windows\win-x64\publish\coreclr.dll" Name="coreclr.dll"/>
       </Component>
-      <Component Id="Component_6" Directory="INSTALLDIR" Guid="6b8a6337-5435-492a-8ffe-2fe252057176">
+      <Component Id="Component_6" Directory="INSTALLDIR" Guid="4edf668f-2868-45fd-9b50-5cc136a7db31">
         <File Id="File_6" Source="D:\Documents\Code\GitHub\.Net\MeshForge\bin\Release\net8.0-windows\win-x64\publish\createdump.exe" Name="createdump.exe" KeyPath="yes"/>
       </Component>
       <Component Id="Component_7" Directory="INSTALLDIR" Guid="*">
@@ -1561,11 +1562,11 @@
       <Component Id="Component_516" Directory="Dir_zh_Hant" Guid="*">
         <File Id="File_516" Source="D:\Documents\Code\GitHub\.Net\MeshForge\bin\Release\net8.0-windows\win-x64\publish\zh-Hant\WindowsFormsIntegration.resources.dll" Name="WindowsFormsIntegration.resources.dll"/>
       </Component>
-      <Component Id="DesktopShortcutComponent" Directory="DesktopFolder" Guid="03c5a8b0-5935-4e3b-8624-1589ab238e77">
+      <Component Id="DesktopShortcutComponent" Directory="DesktopFolder" Guid="43d567ae-9f4b-4ae8-a6db-aa327b7063de">
         <Shortcut Id="DesktopShortcut" Name="MeshForge" Target="[#File_6]" WorkingDirectory="INSTALLDIR" IconIndex="0"/>
         <RegistryValue Root="HKCU" Key="Software\Leland Green Productions\MeshForge" Name="DesktopShortcutInstalled" Type="integer" Value="1" KeyPath="yes"/>
       </Component>
-      <Component Id="StartMenuShortcutComponent" Directory="ShortcutFolder" Guid="4ff40569-a3ec-4c8b-a70a-f87f2e0fff21">
+      <Component Id="StartMenuShortcutComponent" Directory="ShortcutFolder" Guid="2962d5dd-1334-4015-a05c-99fecc8c52ff">
         <Shortcut Id="StartMenuShortcut" Name="MeshForge" Target="[#File_6]" WorkingDirectory="INSTALLDIR" IconIndex="0"/>
         <RegistryValue Root="HKCU" Key="Software\Leland Green Productions\MeshForge" Name="StartMenuShortcutInstalled" Type="integer" Value="1" KeyPath="yes"/>
       </Component>

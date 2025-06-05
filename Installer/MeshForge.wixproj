@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<Project Sdk="WixToolset.Sdk/6.0.0">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" Sdk="WixToolset.Sdk/6.0.0">
   <PropertyGroup>
     <OutputName>MeshForge</OutputName>
     <OutputType>Package</OutputType>
