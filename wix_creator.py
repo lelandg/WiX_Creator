@@ -7,7 +7,7 @@ This script generates a WiX v4.x installer project from a specified Publish dire
 It prompts for common UI options and supports subdirectories.
 """
 __author__ = "Leland Green"
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __license__ = "MIT"
 __date__ = "2025-06-06"
 
@@ -386,8 +386,14 @@ def create_wxs_file(output_dir, options, file_structure):
     # Add WIXUI_INSTALLDIR property and set it to INSTALLDIR
     ET.SubElement(package, "Property", Id="WIXUI_INSTALLDIR", Value="INSTALLDIR")
 
-    # Reference the standard WixUI_Minimal dialog set
-    ET.SubElement(package, "ui:WixUI", Id="WixUI_Minimal")
+    # Reference the WixUI_InstallDir dialog set which includes license agreement
+    ET.SubElement(package, "ui:WixUI", Id="WixUI_InstallDir")
+
+    # Add license file if specified
+    if options.get('license_file'):
+        ET.SubElement(package, "WixVariable", 
+                     Id="WixUILicenseRtf", 
+                     Value=options['license_file'])
 
     # Add UI properties for installation options
     if options['ui_level'] in ['full', 'minimal']:
@@ -407,7 +413,7 @@ def create_wxs_file(output_dir, options, file_structure):
         add_path_default = "1" if options.get('add_to_path', False) else "0"
         ET.SubElement(package, "Property", Id="ADDTOPATH", Value=add_path_default)
 
-        # Using standard WixUI_Mondo dialog set, no need for custom dialog
+        # Using standard WixUI_InstallDir dialog set which includes license agreement
 
     # Create main component group
     components = ET.SubElement(package, "ComponentGroup", Id="ProductComponents")
@@ -580,6 +586,7 @@ def create_wxs_file(output_dir, options, file_structure):
                             ET.SubElement(prog_id, "Extension", Id=ext_id, ContentType="application/octet-stream")
 
     # Add icon if provided
+    icon_added = False
     if options.get('icon_file'):
         # Check if the icon file exists
         icon_path = options['icon_file']
@@ -607,6 +614,7 @@ def create_wxs_file(output_dir, options, file_structure):
             ET.SubElement(package, "Property",
                          Id="ARPPRODUCTICON",
                          Value="ProductIcon")
+            icon_added = True
         else:
             print(f"Warning: Icon file '{icon_path}' not found. Icon will not be included in the installer.")
 
@@ -625,12 +633,19 @@ def create_wxs_file(output_dir, options, file_structure):
                                               Directory="DesktopFolder", # Standard directory for desktop shortcuts
                                               Guid=str(uuid.uuid4())) # Unique GUID for this component
         # Create the shortcut itself, targeting the main executable
-        ET.SubElement(desktop_shortcut_comp, "Shortcut",
-                      Id="DesktopShortcut",
-                      Name=options['product_name'],
-                      Target=f"[#{main_exe_id}]", # Points to the File Id of the main EXE
-                      WorkingDirectory="INSTALLDIR",
-                      IconIndex="0")
+        shortcut_attrs = {
+            "Id": "DesktopShortcut",
+            "Name": options['product_name'],
+            "Target": f"[#{main_exe_id}]", # Points to the File Id of the main EXE
+            "WorkingDirectory": "INSTALLDIR",
+            "IconIndex": "0"
+        }
+
+        # Add icon reference if an icon was added to the package
+        if icon_added:
+            shortcut_attrs["Icon"] = "ProductIcon"
+
+        ET.SubElement(desktop_shortcut_comp, "Shortcut", **shortcut_attrs)
         # KeyPath for the component: A registry value is created to mark the installation state.
         # This is necessary because the component doesn't install a file directly into DesktopFolder.
         ET.SubElement(desktop_shortcut_comp, "RegistryValue",
@@ -650,12 +665,19 @@ def create_wxs_file(output_dir, options, file_structure):
                                                  Directory=start_menu_shortcut_dir,
                                                  Guid=str(uuid.uuid4())) # Unique GUID
         # Create the shortcut
-        ET.SubElement(start_menu_shortcut_comp, "Shortcut",
-                      Id="StartMenuShortcut",
-                      Name=options['product_name'],
-                      Target=f"[#{main_exe_id}]", # Points to the main EXE
-                      WorkingDirectory="INSTALLDIR",
-                      IconIndex="0")
+        shortcut_attrs = {
+            "Id": "StartMenuShortcut",
+            "Name": options['product_name'],
+            "Target": f"[#{main_exe_id}]", # Points to the main EXE
+            "WorkingDirectory": "INSTALLDIR",
+            "IconIndex": "0"
+        }
+
+        # Add icon reference if an icon was added to the package
+        if icon_added:
+            shortcut_attrs["Icon"] = "ProductIcon"
+
+        ET.SubElement(start_menu_shortcut_comp, "Shortcut", **shortcut_attrs)
         # KeyPath for the component, using a registry value
         ET.SubElement(start_menu_shortcut_comp, "RegistryValue",
                       Root="HKCU", # Per-user registry key
