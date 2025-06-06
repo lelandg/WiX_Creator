@@ -384,16 +384,20 @@ def create_wxs_file(output_dir, options, file_structure):
                      Cancel="yes", 
                      Text="Cancel")
 
-        # Publish elements for InstallOptionsDialog navigation (now children of the Dialog)
-        ET.SubElement(dialog, "Publish",
+        # Publish elements for InstallOptionsDialog navigation
+        # These must be under the UI fragment rather than the Dialog
+        ET.SubElement(fragment_ui, "Publish",
+                     Dialog="InstallOptionsDialog",
                      Control="Back",
                      Event="NewDialog",
                      Value="LicenseAgreementDlg")
-        ET.SubElement(dialog, "Publish",
+        ET.SubElement(fragment_ui, "Publish",
+                     Dialog="InstallOptionsDialog",
                      Control="Next",
                      Event="NewDialog",
                      Value="InstallDirDlg")
-        ET.SubElement(dialog, "Publish",
+        ET.SubElement(fragment_ui, "Publish",
+                     Dialog="InstallOptionsDialog",
                      Control="Cancel",
                      Event="SpawnDialog",
                      Value="CancelDlg")
