@@ -7,7 +7,7 @@ This script generates a WiX v4.x installer project from a specified Publish dire
 It prompts for common UI options and supports subdirectories.
 """
 __author__ = "Leland Green"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 __license__ = "MIT"
 __date__ = "2025-06-06"
 
@@ -20,6 +20,7 @@ import json
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom
+import time
 
 UTIL_NS = "http://wixtoolset.org/schemas/v4/wxs/util"
 UI_NS = "http://wixtoolset.org/schemas/v4/wxs/ui"
@@ -27,6 +28,89 @@ UI_NS = "http://wixtoolset.org/schemas/v4/wxs/ui"
 ET.register_namespace('util', UTIL_NS)
 ET.register_namespace('ui', UI_NS)
 ET.register_namespace('', "http://wixtoolset.org/schemas/v4/wxs")
+
+
+def generate_license_rtf(company_name, product_name, output_dir):
+    """
+    Generate a standard commercial license in RTF format.
+
+    Args:
+        company_name (str): The name of the company
+        product_name (str): The name of the product
+        output_dir (str): Directory to save the license file
+
+    Returns:
+        str: Path to the generated license file
+    """
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Generate license filename
+    license_filename = f"{product_name}_License.rtf"
+    license_path = os.path.join(output_dir, license_filename)
+
+    # Get current date for the license
+    current_date = time.strftime("%B %d, %Y")
+
+    # RTF header
+    rtf_header = r"{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil\fcharset0 Arial;}}\viewkind4\uc1\pard\sa200\sl276\slmult1"
+
+    # License content with company name and product name
+    license_content = f"""
+\\f1\\fs28\\b SOFTWARE LICENSE AGREEMENT\\par
+\\fs24\\b0 
+\\b IMPORTANT - READ CAREFULLY:\\b0  This License Agreement ("Agreement") is a legal agreement between you (either an individual or a single entity) and {company_name} for the software product {product_name} ("SOFTWARE"). By installing, copying, or otherwise using the SOFTWARE, you agree to be bound by the terms of this Agreement. If you do not agree to the terms of this Agreement, do not install or use the SOFTWARE.\\par
+
+\\b 1. GRANT OF LICENSE\\b0 \\par
+{company_name} grants you the following rights provided that you comply with all terms and conditions of this Agreement:\\par
+a) Installation and Use: You may install and use an unlimited number of copies of the SOFTWARE on your devices for your commercial purposes.\\par
+b) Reproduction and Distribution: You may reproduce and distribute an unlimited number of copies of the SOFTWARE; provided that each copy shall be a true and complete copy, including all copyright and trademark notices, and shall be accompanied by a copy of this Agreement.\\par
+
+\\b 2. DESCRIPTION OF OTHER RIGHTS AND LIMITATIONS\\b0 \\par
+a) Maintenance of Copyright Notices: You must not remove or alter any copyright notices on any and all copies of the SOFTWARE.\\par
+b) Distribution: You may not distribute registered copies of the SOFTWARE to third parties.\\par
+c) Prohibition on Reverse Engineering, Decompilation, and Disassembly: You may not reverse engineer, decompile, or disassemble the SOFTWARE, except and only to the extent that such activity is expressly permitted by applicable law notwithstanding this limitation.\\par
+d) Rental: You may not rent, lease, or lend the SOFTWARE.\\par
+e) Support Services: {company_name} may provide you with support services related to the SOFTWARE ("Support Services"). Any supplemental software code provided to you as part of the Support Services shall be considered part of the SOFTWARE and subject to the terms and conditions of this Agreement.\\par
+f) Compliance with Applicable Laws: You must comply with all applicable laws regarding use of the SOFTWARE.\\par
+
+\\b 3. TERMINATION\\b0 \\par
+Without prejudice to any other rights, {company_name} may terminate this Agreement if you fail to comply with the terms and conditions of this Agreement. In such event, you must destroy all copies of the SOFTWARE in your possession.\\par
+
+\\b 4. COPYRIGHT\\b0 \\par
+All title, including but not limited to copyrights, in and to the SOFTWARE and any copies thereof are owned by {company_name} or its suppliers. All title and intellectual property rights in and to the content which may be accessed through use of the SOFTWARE is the property of the respective content owner and may be protected by applicable copyright or other intellectual property laws and treaties. This Agreement grants you no rights to use such content. All rights not expressly granted are reserved by {company_name}.\\par
+
+\\b 5. NO WARRANTIES\\b0 \\par
+{company_name} expressly disclaims any warranty for the SOFTWARE. The SOFTWARE is provided 'As Is' without any express or implied warranty of any kind, including but not limited to any warranties of merchantability, noninfringement, or fitness of a particular purpose. {company_name} does not warrant or assume responsibility for the accuracy or completeness of any information, text, graphics, links or other items contained within the SOFTWARE. {company_name} makes no warranties respecting any harm that may be caused by the transmission of a computer virus, worm, time bomb, logic bomb, or other such computer program. {company_name} further expressly disclaims any warranty or representation to Authorized Users or to any third party.\\par
+
+\\b 6. LIMITATION OF LIABILITY\\b0 \\par
+In no event shall {company_name} be liable for any damages (including, without limitation, lost profits, business interruption, or lost information) rising out of 'Authorized Users' use of or inability to use the SOFTWARE, even if {company_name} has been advised of the possibility of such damages. In no event will {company_name} be liable for loss of data or for indirect, special, incidental, consequential (including lost profit), or other damages based in contract, tort or otherwise. {company_name} shall have no liability with respect to the content of the SOFTWARE or any part thereof, including but not limited to errors or omissions contained therein, libel, infringements of rights of publicity, privacy, trademark rights, business interruption, personal injury, loss of privacy, moral rights or the disclosure of confidential information.\\par
+
+\\b 7. INTERNATIONAL USE\\b0 \\par
+You agree to comply with all applicable international laws, including the export and import regulations of other countries, regarding the use of the SOFTWARE.\\par
+
+\\b 8. GOVERNING LAW\\b0 \\par
+This Agreement shall be governed by the laws of the jurisdiction in which {company_name} is registered, excluding its conflict of law provisions. You hereby consent to the exclusive jurisdiction and venue of the courts in the country where {company_name} is registered.\\par
+
+\\b 9. ENTIRE AGREEMENT\\b0 \\par
+This Agreement constitutes the entire agreement between you and {company_name} relating to the SOFTWARE and supersedes all prior or contemporaneous understandings regarding such subject matter. No amendment to or modification of this Agreement will be binding unless in writing and signed by {company_name}.\\par
+
+This license is effective as of {current_date}.\\par
+{company_name}
+"""
+
+    # Combine RTF header and content
+    rtf_content = rtf_header + license_content + "}"
+
+    # Write to file
+    try:
+        with open(license_path, 'w', encoding='utf-8') as f:
+            f.write(rtf_content)
+        print(f"License file generated at: {license_path}")
+        return license_path
+    except Exception as e:
+        print(f"Error generating license file: {e}")
+        return None
 
 
 def parse_arguments():
@@ -137,8 +221,23 @@ def prompt_for_ui_options(defaults=None):
 
     if ui_options != "none":
         default_license = defaults.get('license_file', '')
-        license_prompt = f"License File Path (optional) [{default_license}]: " if default_license else "License File Path (optional): "
-        options['license_file'] = input(license_prompt) or default_license
+        default_generate_license = defaults.get('generate_license', True)
+        generate_license_default = "y" if default_generate_license else "n"
+        generate_license_prompt = f"Generate standard commercial license? (y/n) [{generate_license_default}]: "
+        generate_license_input = input(generate_license_prompt).lower()
+
+        if generate_license_input:
+            options['generate_license'] = generate_license_input == "y"
+        else:
+            options['generate_license'] = default_generate_license
+
+        if options['generate_license']:
+            # We'll generate the license file later when we have the output directory
+            options['license_file'] = ""
+        else:
+            # Ask for an existing license file
+            license_prompt = f"License File Path (optional) [{default_license}]: " if default_license else "License File Path (optional): "
+            options['license_file'] = input(license_prompt) or default_license
 
         default_banner = defaults.get('banner_image', '')
         banner_prompt = f"Banner Image Path (optional) [{default_banner}]: " if default_banner else "Banner Image Path (optional): "
@@ -883,6 +982,12 @@ def main():
     # Scan the publish directory
     print(f"Scanning directory: {publish_dir}")
     file_structure = scan_directory(publish_dir)
+
+    # Generate license file if requested
+    if options.get('generate_license', False):
+        license_path = generate_license_rtf(options['manufacturer'], options['product_name'], output_dir)
+        if license_path:
+            options['license_file'] = license_path
 
     # Create WiX project
     create_wix_project(publish_dir, output_dir, options, file_structure)

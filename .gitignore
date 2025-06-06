@@ -165,3 +165,14 @@ MeshForge_App/bin/MeshForge.exe
 MeshForge_App/data/config.json
 MeshForge_App/data/subfolder/asset.dat
 MeshForge_App/docs/readme.txt
+build.log
+Installer/MeshForge.wixproj
+Installer/MeshForge.wxs
+Installer/MeshForge_License.rtf
+Installer/README.md
+MeshForge.json
+Resources/checkerboard.png
+Resources/MeshForge Splash.png
+Resources/MeshForge.ico
+dist.msi
+dist.wixpdb
