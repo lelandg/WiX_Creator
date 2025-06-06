@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-WiX Creator - A tool to create WiX v6.0.0 installer projects
+WiX Creator - A tool to create WiX v4.x installer projects
 
-This script generates a WiX v6.0.0 installer project from a specified Publish directory.
+This script generates a WiX v4.x installer project from a specified Publish directory.
+(Works with WiX v6.0.0 and later)
 It prompts for common UI options and supports subdirectories.
 """
+__author__ = "Leland Green"
+__version__ = "1.0.1"
+__license__ = "MIT"
+__date__ = "2025-06-06"
 
 import os
 import sys
@@ -15,6 +20,13 @@ import json
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom
+
+UTIL_NS = "http://wixtoolset.org/schemas/v4/wxs/util"
+UI_NS = "http://wixtoolset.org/schemas/v4/wxs/ui"
+
+ET.register_namespace('util', UTIL_NS)
+ET.register_namespace('ui', UI_NS)
+ET.register_namespace('', "http://wixtoolset.org/schemas/v4/wxs")
 
 
 def parse_arguments():
@@ -159,6 +171,48 @@ def prompt_for_ui_options(defaults=None):
     else:
         options['add_start_menu_shortcut'] = default_start_menu
 
+    # Shortcut folder name customization
+    if options['add_start_menu_shortcut']:
+        default_shortcut_folder = defaults.get('shortcut_folder_name', options['manufacturer'])
+        shortcut_folder_prompt = f"Start Menu Shortcut Folder Name [{default_shortcut_folder}]: "
+        options['shortcut_folder_name'] = input(shortcut_folder_prompt) or default_shortcut_folder
+
+    # Shortcut scope (all users vs. current user)
+    default_all_users = defaults.get('shortcut_all_users', False)
+    all_users_default = "y" if default_all_users else "n"
+    all_users_prompt = f"Create shortcuts for all users? (y/n) [{all_users_default}]: "
+    all_users_input = input(all_users_prompt).lower()
+    if all_users_input:
+        options['shortcut_all_users'] = all_users_input == "y"
+    else:
+        options['shortcut_all_users'] = default_all_users
+
+    # Run after setup option
+    default_run_after = defaults.get('run_after_install', False)
+    run_after_default = "y" if default_run_after else "n"
+    run_after_prompt = f"Run program after installation? (y/n) [{run_after_default}]: "
+    run_after_input = input(run_after_prompt).lower()
+    if run_after_input:
+        options['run_after_install'] = run_after_input == "y"
+    else:
+        options['run_after_install'] = default_run_after
+
+    # Add to PATH option
+    default_add_path = defaults.get('add_to_path', False)
+    add_path_default = "y" if default_add_path else "n"
+    add_path_prompt = f"Add application directory to PATH? (y/n) [{add_path_default}]: "
+    add_path_input = input(add_path_prompt).lower()
+    if add_path_input:
+        options['add_to_path'] = add_path_input == "y"
+    else:
+        options['add_to_path'] = default_add_path
+
+    # File associations
+    default_file_assoc = defaults.get('file_associations', '')
+    file_assoc_prompt = f"File extensions to associate (comma-separated, e.g., .txt,.doc) [{default_file_assoc}]: "
+    file_assoc_input = input(file_assoc_prompt)
+    options['file_associations'] = file_assoc_input or default_file_assoc
+
     return options
 
 
@@ -191,7 +245,7 @@ def scan_directory(directory):
 
 
 def create_wix_project(publish_dir, output_dir, options, file_structure):
-    """Create WiX v6.0.0 project files."""
+    """Create WiX v4.x project files."""
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
 
@@ -204,161 +258,511 @@ def create_wix_project(publish_dir, output_dir, options, file_structure):
     # Create README file with build instructions
     create_readme_file(output_dir)
 
-    print(f"WiX v6.0.0 installer project created in {output_dir}")
+    print(f"WiX v4.x installer project created in {output_dir}")
 
 
 def create_wxs_file(output_dir, options, file_structure):
     """Create the main .wxs file for the WiX project."""
     wxs_path = os.path.join(output_dir, f"{options['product_name']}.wxs")
 
-    # Create the root element
-    wix = ET.Element("Wix", xmlns="http://wixtoolset.org/schemas/v4/wxs")
+    # Create the root element with namespaces in the correct order
+    wix = ET.Element(
+        "Wix",
+        {"xmlns": "http://wixtoolset.org/schemas/v4/wxs",
+         "xmlns:ui": UI_NS}
+    )
 
     # Create the package element
-    package = ET.SubElement(wix, "Package", 
+    package = ET.SubElement(wix, "Package",
                            Name=options['product_name'],
                            Manufacturer=options['manufacturer'],
                            Version=options['product_version'],
                            UpgradeCode=options['upgrade_code'])
 
+    # WixUICostingPopupOptOut variable is not needed in the reference file
+
+    # Add MediaTemplate element for packaging files
+    ET.SubElement(package, "MediaTemplate", EmbedCab="yes")
+
+    # Add WIXUI_INSTALLDIR property and set it to INSTALLDIR
+    ET.SubElement(package, "Property", Id="WIXUI_INSTALLDIR", Value="INSTALLDIR")
+
+    # Reference the standard WixUI_Minimal dialog set
+    ET.SubElement(package, "ui:WixUI", Id="WixUI_Minimal")
+
+    # Add UI properties for installation options
+    if options['ui_level'] in ['full', 'minimal']:
+        # Property for desktop shortcut
+        desktop_shortcut_default = "1" if options.get('add_desktop_shortcut', True) else "0"
+        ET.SubElement(package, "Property", Id="INSTALLDESKTOPSHORTCUT", Value=desktop_shortcut_default)
+
+        # Property for start menu shortcut
+        start_menu_default = "1" if options.get('add_start_menu_shortcut', True) else "0"
+        ET.SubElement(package, "Property", Id="INSTALLSTARTMENUSHORTCUT", Value=start_menu_default)
+
+        # Property for running after installation
+        run_after_default = "1" if options.get('run_after_install', False) else "0"
+        ET.SubElement(package, "Property", Id="LAUNCHAPPONEXIT", Value=run_after_default)
+
+        # Property for adding to PATH
+        add_path_default = "1" if options.get('add_to_path', False) else "0"
+        ET.SubElement(package, "Property", Id="ADDTOPATH", Value=add_path_default)
+
+        # Using standard WixUI_Mondo dialog set, no need for custom dialog
+
     # Create main component group
     components = ET.SubElement(package, "ComponentGroup", Id="ProductComponents")
 
     # Create a Feature element that references the ComponentGroup
-    feature = ET.SubElement(package, "Feature", 
-                           Id="ProductFeature", 
+    feature = ET.SubElement(package, "Feature",
+                           Id="ProductFeature",
                            Title=options['product_name'],
                            Level="1")
     ET.SubElement(feature, "ComponentGroupRef", Id="ProductComponents")
 
-    # Create directory structure
+    # Create directory structure - will be populated with subdirectories later
     directories = ET.SubElement(package, "StandardDirectory", Id="ProgramFiles6432Folder")
-    manufacturer_dir = ET.SubElement(directories, "Directory", 
-                                    Id="ManufacturerFolder", 
+    manufacturer_dir = ET.SubElement(directories, "Directory",
+                                    Id="ManufacturerFolder",
                                     Name=options['manufacturer'])
-    product_dir = ET.SubElement(manufacturer_dir, "Directory", 
-                               Id="INSTALLDIR", 
+    product_dir = ET.SubElement(manufacturer_dir, "Directory",
+                               Id="INSTALLDIR",
                                Name=options['install_dir_name'])
+
+    # Add standard directories
+    ET.SubElement(package, "StandardDirectory", Id="DesktopFolder")
+    program_menu = ET.SubElement(package, "StandardDirectory", Id="ProgramMenuFolder")
+
+    # Create custom shortcut folder if specified
+    if options.get('add_start_menu_shortcut') and options.get('shortcut_folder_name'):
+        shortcut_folder = ET.SubElement(program_menu, "Directory",
+                                       Id="ShortcutFolder",
+                                       Name=options['shortcut_folder_name'])
+
+        # Add a component to remove the shortcut folder on uninstall
+        shortcut_folder_component = ET.SubElement(components, "Component",
+                                                Id="ShortcutFolderComponent",
+                                                Directory="ShortcutFolder",
+                                                Guid=str(uuid.uuid4()))
+
+        # Add registry key as KeyPath
+        ET.SubElement(shortcut_folder_component, "RegistryValue",
+                     Root="HKCU",
+                     Key=f"Software\\{options['manufacturer']}\\{options['product_name']}",
+                     Name="installed_shortcut_folder",
+                     Type="integer",
+                     Value="1",
+                     KeyPath="yes")
+
+        # Add RemoveFile entry for the shortcut folder
+        ET.SubElement(shortcut_folder_component, "RemoveFolder",
+                     Id="RemoveShortcutFolder",
+                     On="uninstall")
 
     # Add files to the installer
     file_id_counter = 1
     component_id_counter = 1
+    main_exe_id = None  # Store the ID of the main executable for later use
 
+    # Create a dictionary to store directory elements by path and collect subdirectory names
+    directory_elements = {}
+    directory_elements[''] = product_dir  # Root directory
+    subdirectories = set()  # To collect unique subdirectory names
+
+    # First pass: identify all subdirectories
     for dir_path, files in file_structure.items():
         if dir_path:
-            # Create subdirectory
-            current_dir = product_dir
-            for part in dir_path.split(os.sep):
-                # Ensure directory ID only contains legal characters and starts with a letter or underscore
-                # Legal characters are A-Z, a-z, digits, underscores, and periods
-                # Replace any other characters with underscores
+            parts = dir_path.split(os.sep)
+            current_path = ''
+
+            for part in parts:
+                if current_path:
+                    current_path = os.path.join(current_path, part)
+                else:
+                    current_path = part
+
+                # Store the directory path and sanitized name
                 sanitized_part = ''.join(c if c.isalnum() or c == '_' or c == '.' else '_' for c in part)
-                dir_id = f"Dir_{sanitized_part}"
-                current_dir = ET.SubElement(current_dir, "Directory", Id=dir_id, Name=part)
+                # Handle special cases for directory IDs with hyphens
+                if '-' in part:
+                    sanitized_part = part.replace('-', '_')
+
+                subdirectories.add((current_path, sanitized_part, part))
+
+    # Create a mapping of directory paths to directory IDs
+    dir_id_map = {'': 'INSTALLDIR'}  # Root directory is INSTALLDIR
+
+    # Create directory IDs for all subdirectories
+    for dir_path, sanitized_part, part in subdirectories:
+        dir_id = f"Dir_{sanitized_part}"
+        dir_id_map[dir_path] = dir_id
+
+    # Second pass: add files to directories
+    for dir_path, files in file_structure.items():
+        # Get the directory ID for this path
+        if dir_path == '':
+            dir_id = 'INSTALLDIR'
         else:
-            current_dir = product_dir
+            # Get the last part of the path
+            parts = dir_path.split(os.sep)
+            last_part = parts[-1]
+
+            # Sanitize the part name
+            sanitized_part = ''.join(c if c.isalnum() or c == '_' or c == '.' else '_' for c in last_part)
+            # Handle special cases for directory IDs with hyphens
+            if '-' in last_part:
+                sanitized_part = last_part.replace('-', '_')
+
+            dir_id = f"Dir_{sanitized_part}"
 
         for file_info in files:
             component_id = f"Component_{component_id_counter}"
             component_id_counter += 1
 
-            component = ET.SubElement(components, "Component", Id=component_id, Directory=current_dir.get("Id"))
+            is_main_exe_component = False
+            current_file_id_str = f"File_{file_id_counter}" # This is the ID for the current file
 
-            file_id = f"File_{file_id_counter}"
-            file_id_counter += 1
+            if file_info['name'].endswith('.exe') and main_exe_id is None:
+                main_exe_id = current_file_id_str # Assign the correct file_id
+                is_main_exe_component = True
 
-            file_element = ET.SubElement(component, "File", 
-                                        Id=file_id,
-                                        Source=file_info['path'],
-                                        Name=file_info['name'])
+            # Generate a GUID for the main EXE component, others can use "*"
+            component_guid = str(uuid.uuid4()) if is_main_exe_component else "*"
+
+            scope_attributes = {}
+            if options.get('shortcut_all_users', False) : # Apply to all components for consistency
+                scope_attributes["Scope"] = "perMachine"
+
+            component = ET.SubElement(components, "Component",
+                                     Id=component_id,
+                                     Directory=dir_id,
+                                     Guid=component_guid,
+                                     **scope_attributes)
+
+            # file_id is now current_file_id_str, declared earlier
+            file_id_counter += 1 # Increment for the next file
+
+            file_attributes = {
+                "Id": current_file_id_str, # Use the correct ID
+                "Source": file_info['path'],
+                "Name": file_info['name']
+            }
+            if is_main_exe_component:
+                # The main executable's File element is marked as KeyPath="yes".
+                # This is crucial because its component has a stable GUID and might be referenced
+                # by other features (like shortcuts). The KeyPath tells Windows Installer
+                # what file/registry key is the "key" for this component's installation status.
+                # A stable GUID is important for upgrades and patching.
+                file_attributes["KeyPath"] = "yes"
+
+            file_element = ET.SubElement(component, "File", **file_attributes)
 
             # Add shortcut for executable files
-            if file_info['name'].endswith('.exe') and (options['add_desktop_shortcut'] or options['add_start_menu_shortcut']):
-                if options['add_desktop_shortcut']:
-                    ET.SubElement(component, "Shortcut",
-                                 Id=f"DesktopShortcut_{file_id}",
-                                 Directory="DesktopFolder",
-                                 Name=options['product_name'],
-                                 WorkingDirectory="INSTALLDIR",
-                                 IconIndex="0",
-                                 Advertise="yes")
+            if file_info['name'].endswith('.exe'):
+                # Store the first executable as the main one (already done above)
+                # if main_exe_id is None:
+                #    main_exe_id = file_id
 
-                if options['add_start_menu_shortcut']:
-                    # Add ProgramMenuFolder as a separate StandardDirectory element
-                    ET.SubElement(package, "StandardDirectory", Id="ProgramMenuFolder")
-                    ET.SubElement(component, "Shortcut",
-                                 Id=f"StartMenuShortcut_{file_id}",
-                                 Directory="ProgramMenuFolder",
-                                 Name=options['product_name'],
-                                 WorkingDirectory="INSTALLDIR",
-                                 IconIndex="0",
-                                 Advertise="yes")
+                # Add file associations if specified
+                if options.get('file_associations'):
+                    for ext in options['file_associations'].split(','):
+                        ext = ext.strip()
+                        if ext:
+                            # Create a unique ID for this extension
+                            ext_id = ext.replace('.', '').upper()
+
+                            # Add ProgId for this extension
+                            prog_id = ET.SubElement(component, "ProgId",
+                                                  Id=f"{options['product_name']}{ext_id}",
+                                                  Description=f"{options['product_name']} File",
+                                                  Icon=file_id)
+
+                            # Associate extension with ProgId
+                            ET.SubElement(prog_id, "Extension", Id=ext_id, ContentType="application/octet-stream")
 
     # Add icon if provided
     if options.get('icon_file'):
-        ET.SubElement(package, "Icon", 
-                     Id="ProductIcon", 
-                     SourceFile=options['icon_file'])
-        ET.SubElement(package, "Property", 
-                     Id="ARPPRODUCTICON", 
-                     Value="ProductIcon")
+        # Check if the icon file exists
+        icon_path = options['icon_file']
+
+        # If the path is relative, try to resolve it
+        if not os.path.isabs(icon_path):
+            # Try different case variations for the filename
+            icon_dir = os.path.dirname(icon_path) or '.'
+            icon_filename = os.path.basename(icon_path)
+
+            # Check if directory exists
+            if os.path.exists(icon_dir):
+                # Get actual files in the directory with correct case
+                for filename in os.listdir(icon_dir):
+                    if filename.lower() == icon_filename.lower():
+                        # Found the file with correct case
+                        icon_path = os.path.join(icon_dir, filename)
+                        break
+
+        # Only add the icon if the file exists
+        if os.path.exists(icon_path):
+            ET.SubElement(package, "Icon",
+                         Id="ProductIcon",
+                         SourceFile=icon_path)
+            ET.SubElement(package, "Property",
+                         Id="ARPPRODUCTICON",
+                         Value="ProductIcon")
+        else:
+            print(f"Warning: Icon file '{icon_path}' not found. Icon will not be included in the installer.")
+
+    # Conditional Feature Components (Shortcuts, PATH)
+    # These features are placed in separate components to allow conditional installation
+    # based on user selections in the InstallOptionsDialog.
+    # Each component uses a <Condition> element that checks a WiX property (e.g., INSTALLDESKTOPSHORTCUT).
+    # This property is set by the corresponding checkbox in the UI.
+    # Components that don't install files directly (like these, which manage shortcuts or registry entries)
+    # must have a KeyPath defined, typically a RegistryValue, to ensure they are correctly installed/uninstalled.
+
+    # Create Desktop Shortcut Component
+    if options.get('add_desktop_shortcut') and main_exe_id:
+        desktop_shortcut_comp = ET.SubElement(components, "Component",
+                                              Id="DesktopShortcutComponent",
+                                              Directory="DesktopFolder", # Standard directory for desktop shortcuts
+                                              Guid=str(uuid.uuid4())) # Unique GUID for this component
+        # Create the shortcut itself, targeting the main executable
+        ET.SubElement(desktop_shortcut_comp, "Shortcut",
+                      Id="DesktopShortcut",
+                      Name=options['product_name'],
+                      Target=f"[#{main_exe_id}]", # Points to the File Id of the main EXE
+                      WorkingDirectory="INSTALLDIR",
+                      IconIndex="0")
+        # KeyPath for the component: A registry value is created to mark the installation state.
+        # This is necessary because the component doesn't install a file directly into DesktopFolder.
+        ET.SubElement(desktop_shortcut_comp, "RegistryValue",
+                      Root="HKCU", # Per-user registry key
+                      Key=f"Software\\{options['manufacturer']}\\{options['product_name']}",
+                      Name="DesktopShortcutInstalled",
+                      Type="integer",
+                      Value="1",
+                      KeyPath="yes")
+
+    # Create Start Menu Shortcut Component
+    if options.get('add_start_menu_shortcut') and main_exe_id:
+        # Determine the directory for the start menu shortcut (custom folder or general program menu)
+        start_menu_shortcut_dir = "ShortcutFolder" if options.get('shortcut_folder_name') else "ProgramMenuFolder"
+        start_menu_shortcut_comp = ET.SubElement(components, "Component",
+                                                 Id="StartMenuShortcutComponent",
+                                                 Directory=start_menu_shortcut_dir,
+                                                 Guid=str(uuid.uuid4())) # Unique GUID
+        # Create the shortcut
+        ET.SubElement(start_menu_shortcut_comp, "Shortcut",
+                      Id="StartMenuShortcut",
+                      Name=options['product_name'],
+                      Target=f"[#{main_exe_id}]", # Points to the main EXE
+                      WorkingDirectory="INSTALLDIR",
+                      IconIndex="0")
+        # KeyPath for the component, using a registry value
+        ET.SubElement(start_menu_shortcut_comp, "RegistryValue",
+                      Root="HKCU", # Per-user registry key
+                      Key=f"Software\\{options['manufacturer']}\\{options['product_name']}",
+                      Name="StartMenuShortcutInstalled",
+                      Type="integer",
+                      Value="1",
+                      KeyPath="yes")
+
+    # Create Environment Path Component
+    if options.get('add_to_path'):
+        env_path_comp = ET.SubElement(components, "Component",
+                                      Id="EnvironmentPathComponent",
+                                      Directory="INSTALLDIR",  # The component is associated with INSTALLDIR
+                                      Guid=str(uuid.uuid4())) # Unique GUID
+        # The Environment element modifies the system PATH
+        ET.SubElement(env_path_comp, "Environment",
+                      Id="EnvironmentPath",
+                      Name="PATH", # Modifying the PATH variable
+                      Value="[INSTALLDIR]", # Adding the installation directory
+                      Permanent="no", # Do not make permanent, will be removed on uninstall
+                      Part="last", # Append to the PATH
+                      Action="set", # Set the environment variable
+                      System="yes") # Modify the system PATH (requires elevation)
+        # KeyPath for the component. Since Environment elements are declarative,
+        # a RegistryValue is used to ensure the component is properly managed.
+        ET.SubElement(env_path_comp, "RegistryValue",
+                      Root="HKLM", # HKEY_LOCAL_MACHINE for system PATH modification
+                      Key=f"SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+                      Name=f"Path_{options['product_name']}", # Unique name for registry value
+                      Type="string",
+                      Value="[INSTALLDIR]",
+                      KeyPath="yes")
+
+    # Add custom actions for UI mode
+    if options['ui_level'] in ['full', 'minimal'] and main_exe_id and options.get('run_after_install', False):
+        # Create properties to store paths
+        ET.SubElement(package, "Property",
+                     Id="WixShellExecTarget",
+                     Value=f"[#[{main_exe_id}]]")
+
+        # For UI mode, we'll use properties to control behavior
+        # The actual shortcuts and environment variables will be added in the components loop
+        # based on the file type and directory path
+
+        # Add the custom action that will run the executable
+        ET.SubElement(package, "CustomAction",
+                     Id="LaunchApplication",
+                     BinaryRef="WixCA",
+                     DllEntry="WixShellExec",
+                     Impersonate="yes")
+
+        # Add the InstallExecuteSequence element to schedule the custom action
+        install_exec_seq = ET.SubElement(package, "InstallExecuteSequence")
+
+        # Use the UI property to determine whether to run the application
+        ET.SubElement(install_exec_seq, "Custom",
+                     Action="LaunchApplication",
+                     After="InstallFinalize",
+                     Condition="NOT Installed AND LAUNCHAPPONEXIT=1")
+
+    # For non-UI mode, add custom action if run_after_install is enabled
+    elif main_exe_id and options.get('run_after_install', False):
+        # Create a property to store the path to the executable
+        ET.SubElement(package, "Property",
+                     Id="WixShellExecTarget",
+                     Value=f"[#[{main_exe_id}]]")
+
+        # Add the custom action that will run the executable
+        ET.SubElement(package, "CustomAction",
+                     Id="LaunchApplication",
+                     BinaryRef="WixCA",
+                     DllEntry="WixShellExec",
+                     Impersonate="yes")
+
+        # Add the InstallExecuteSequence element to schedule the custom action
+        install_exec_seq = ET.SubElement(package, "InstallExecuteSequence")
+
+        # Use the hardcoded setting if no UI
+        ET.SubElement(install_exec_seq, "Custom",
+                     Action="LaunchApplication",
+                     After="InstallFinalize",
+                     Condition="NOT Installed")
+
+    # Add subdirectories to the product_dir element
+    # Create a set to track unique directory names
+    unique_dirs = set()
+
+    # Collect unique directory names from file paths
+    for dir_path, files in file_structure.items():
+        if dir_path:
+            # Get the first level directory
+            parts = dir_path.split(os.sep)
+            first_part = parts[0]
+
+            # Sanitize the part name
+            sanitized_part = ''.join(c if c.isalnum() or c == '_' or c == '.' else '_' for c in first_part)
+            # Handle special cases for directory IDs with hyphens
+            if '-' in first_part:
+                sanitized_part = first_part.replace('-', '_')
+
+            unique_dirs.add((sanitized_part, first_part))
+
+    # Add each unique directory to the product_dir element
+    for sanitized_part, part in sorted(unique_dirs):
+        dir_id = f"Dir_{sanitized_part}"
+        ET.SubElement(product_dir, "Directory", Id=dir_id, Name=part)
 
     # Write the XML to file with proper formatting
     rough_string = ET.tostring(wix, 'utf-8')
     reparsed = minidom.parseString(rough_string)
-    with open(wxs_path, 'w', encoding='utf-8') as f:
-        f.write(reparsed.toprettyxml(indent="  "))
+
+    # Write to a temporary file first to avoid permission issues
+    temp_wxs_path = wxs_path + ".tmp"
+    try:
+        with open(temp_wxs_path, 'w', encoding='utf-8') as f:
+            f.write(reparsed.toprettyxml(indent="  "))
+
+        # If the target file exists, try to remove it
+        if os.path.exists(wxs_path):
+            try:
+                os.remove(wxs_path)
+            except PermissionError:
+                print(f"Warning: Could not overwrite {wxs_path}. The file may be in use.")
+                print(f"The new file has been saved as {temp_wxs_path}")
+                return
+
+        # Rename the temporary file to the target file
+        os.rename(temp_wxs_path, wxs_path)
+    except Exception as e:
+        print(f"Error writing to {wxs_path}: {e}")
+        if os.path.exists(temp_wxs_path):
+            print(f"The file has been saved as {temp_wxs_path}")
+        return
 
 
 def create_wixproj_file(output_dir, options):
     """Create the .wixproj file for the WiX project."""
     wixproj_path = os.path.join(output_dir, f"{options['product_name']}.wixproj")
 
-    # Use the WiX SDK style project so wix build works without extra properties
-    project = ET.Element("Project", Sdk="WixToolset.Sdk/6.0.0")
+    # Use the WiX SDK style project so "wix build" works correctly
+    project = ET.Element(
+        "Project",
+        {"Sdk": "WixToolset.Sdk/6.0.0"},
+    )
 
-    # Property group with minimal required settings
+    # Minimal property group
     property_group = ET.SubElement(project, "PropertyGroup")
     ET.SubElement(property_group, "OutputName").text = options['product_name']
     ET.SubElement(property_group, "OutputType").text = "Package"
-    # Add standard MSBuild properties
-    ET.SubElement(property_group, "Configuration").text = "Release" # Default to Release
-    ET.SubElement(property_group, "Platform").text = "x64" # Default to x64
-    # OutputPath is preferred over BuildOutputDirectory for SDK-style projects
-    ET.SubElement(property_group, "OutputPath").text = "bin\\$(Configuration)\\"
-    ET.SubElement(property_group, "ProjectDir").text = output_dir
+    # Use a fixed output path so wix build does not require $(Configuration)
+    ET.SubElement(property_group, "OutputPath").text = "bin\\"
 
-    # Include the main .wxs file
+    # Compile item for main wxs file
     item_group = ET.SubElement(project, "ItemGroup")
     ET.SubElement(item_group, "Compile", Include=f"{options['product_name']}.wxs")
 
-    # Always reference the UI and Util extensions for compatibility
+    # Always include UI extension
     extensions_group = ET.SubElement(project, "ItemGroup")
     ET.SubElement(extensions_group, "WixExtension", Include="WixToolset.UI.wixext")
-    ET.SubElement(extensions_group, "WixExtension", Include="WixToolset.Util.wixext")
+    ET.SubElement(extensions_group, "PackageReference", Include="WixToolset.UI.wixext", Version="4.0.0")
 
     # Write the XML to file with proper formatting
     rough_string = ET.tostring(project, 'utf-8')
     reparsed = minidom.parseString(rough_string)
-    with open(wixproj_path, 'w', encoding='utf-8') as f:
-        f.write(reparsed.toprettyxml(indent="  "))
+
+    # Write to a temporary file first to avoid permission issues
+    temp_wixproj_path = wixproj_path + ".tmp"
+    try:
+        with open(temp_wixproj_path, 'w', encoding='utf-8') as f:
+            f.write(reparsed.toprettyxml(indent="  "))
+
+        # If the target file exists, try to remove it
+        if os.path.exists(wixproj_path):
+            try:
+                os.remove(wixproj_path)
+            except PermissionError:
+                print(f"Warning: Could not overwrite {wixproj_path}. The file may be in use.")
+                print(f"The new file has been saved as {temp_wixproj_path}")
+                return
+
+        # Rename the temporary file to the target file
+        os.rename(temp_wixproj_path, wixproj_path)
+    except Exception as e:
+        print(f"Error writing to {wixproj_path}: {e}")
+        if os.path.exists(temp_wixproj_path):
+            print(f"The file has been saved as {temp_wixproj_path}")
+        return
 
 
 def create_readme_file(output_dir):
     """Create a README file with build instructions."""
     readme_path = os.path.join(output_dir, "README.md")
 
-    readme_content = """# WiX v6.0.0 Installer Project
+    readme_content = """# WiX v4.x Installer Project
 
-This directory contains a WiX v6.0.0 installer project generated by wix_creator.py.
+This directory contains a WiX v4.x installer project generated by wix_creator.py.
 
 ## Prerequisites
 
-- WiX Toolset v6.0.0 or later (https://wixtoolset.org/)
+- WiX Toolset v4.x or later (https://wixtoolset.org/)
 - .NET 6.0 or later
 
 ## Building the Installer
 
+### Option 1: Using dotnet build
 1. Open a command prompt or PowerShell window.
 2. Navigate to this directory.
 3. Run the following command:
@@ -369,17 +773,69 @@ dotnet build
 
 The installer (.msi file) will be created in the bin/Debug or bin/Release directory.
 
+### Option 2: Using wix build directly
+1. Open a command prompt or PowerShell window.
+2. Navigate to this directory.
+3. Run the following command:
+
+```
+wix build -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext YourProductName.wxs
+```
+
+Replace `YourProductName` with the actual name of your product. This command includes the necessary UI and Util extensions required for the installer.
+
 ## Customizing the Installer
 
 You can modify the .wxs file to customize the installer further. Refer to the WiX documentation at https://wixtoolset.org/docs/ for more information.
 """
 
-    with open(readme_path, 'w', encoding='utf-8') as f:
-        f.write(readme_content)
+    # Write to a temporary file first to avoid permission issues
+    temp_readme_path = readme_path + ".tmp"
+    try:
+        with open(temp_readme_path, 'w', encoding='utf-8') as f:
+            f.write(readme_content)
+
+        # If the target file exists, try to remove it
+        if os.path.exists(readme_path):
+            try:
+                os.remove(readme_path)
+            except PermissionError:
+                print(f"Warning: Could not overwrite {readme_path}. The file may be in use.")
+                print(f"The new file has been saved as {temp_readme_path}")
+                return
+
+        # Rename the temporary file to the target file
+        os.rename(temp_readme_path, readme_path)
+    except Exception as e:
+        print(f"Error writing to {readme_path}: {e}")
+        if os.path.exists(temp_readme_path):
+            print(f"The file has been saved as {temp_readme_path}")
+        return
+
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description='Create a WiX v6.0.0 installer project.',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+If PUBLISH_DIR is not provided, the script attempts to load settings from 'last_project.json'.
+
+Examples:
+  %(prog)s    # Load settings from last_project.json and prompt for confirmation
+  %(prog)s ..\\MyApp\\bin\\Release\\net8.0\\publish
+  %(prog)s c:\\path\\to\\published\\app -o MyInstallerProject
+  %(prog)s D:\\Documents\\Code\\GitHub\\.Net\\MeshForge\\bin\\Release\\net8.0-windows\\win-x64\\publish -o Installer
+        """)
+    parser.add_argument('publish_dir', nargs='?',
+                        help='Directory containing files to be included in the installer')
+    parser.add_argument('--output-dir', '-o', default='Installer',
+                        help='Output directory for the installer project (default: Installer)')
+    return parser.parse_args()
 
 
 def main():
     """Main function."""
+    print (f"WiX v4.x Installer Project Creator - wix_creator.py v{__version__}")
     args = parse_arguments()
 
     # Load defaults from last project if available
