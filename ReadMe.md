@@ -2,13 +2,45 @@
 This script is designed to create a WiX installer for applications. It automates the process of generating a WiX XML file.
 
 ### Features
-- Generates a Wix XML file based on the provided configuration.
-- Saves the XML file to a specified output directory.
-- Creates a project file for each Wix project. 
-- It automatically reloads settings from a configuration file, based on "Product Name".
+- **Generates a Wix XML** file based on the provided configuration.
+- **Saves the XML** file to a specified output directory.
+- **Creates a project file** for each Wix project. 
+- **Automatically reloads settings** from a configuration file, based on "Product Name."
+- **Automatic project wizard:** Guides you through essential WiX installer options with interactive prompts or loads defaults from prior builds.
+- **Configuration management:** Saves and loads all installer settings (`<ProjectName>.json` or `last_project.json`) for reproducible, incremental editing across builds.
+- **Directory scanning:** Recursively scans your application's output directory to automatically include all files and folder structure in the installer.
+- **Customizable UI:** Prompts for standard WiX User Interface settings, such as EULA/license text (supports generating an RTF license file), install scope (per-machine/per-user), install location, and more.
+- **Outputs all essential WiX project files:**
+  - `.wxs` file (WiX XML definition for the installer)
+  - `.wixproj` MSBuild project file to support `dotnet build`
+  - `README.txt` (optional, with per-project setup instructions)
+  - `<ProductName>_License.rtf` (license file for the installer UI)
+- **Command-line operation:** Supports full CLI usage with options for:
+  - Specifying configuration file (`--config`)
+  - Defining output directory (`--output`)
+  - Running with minimal prompts if a config file is available
+- **Efficient rebuilds:** Retains and reloads previous project settings, supporting rapid rebuilds by recalling the last used options.
+- **Full compatibility with WiX v6 (.NET integration):** Output projects are ready for building with WiX 6.0 and `dotnet build` workflow.
+- **License/EULA support:** Prompts for and generates the required `.rtf` license file for the installer UI.
+- **Custom actions and extensions:** Adds references to necessary WiX UI and Util extensions automatically to avoid build errors.
+- **Multi-platform scripting:** Fully functional on Windows 10/11 with PowerShell automation for WiX installation if needed.
+- **Help and usage hints:** Includes detailed in-script usage guidance and shell tips for efficient iterative builds.
 
-## Requirements:
-_From **this** repository_, you only need the `wix_creator.py` script. 
+## Requirements
+
+- Python 3.7+ (for running `wix_creator.py`) [https://www.python.org/downloads/](https://www.python.org/downloads/)
+- WiX
+- [WiX Toolset v6.0.0.6149](https://wixtoolset.org/)
+- [WixToolset.BuildTools](https://www.nuget.org/packages/WixToolset.BuildTools) NuGet package for .NET MSBuild-based builds
+- _From **this** repository_, you only need the `wix_creator.py` script. 
+
+## Quick Start
+Install WiX (if needed). 
+```powershell
+dotnet tool install --global wix --version 6.0.1
+```
+
+Then, clone this repository or simply download the `wix_creator.py` script. That's all you need to get started.
 
 To build the resulting installer, you will need the following:
 
