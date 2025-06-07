@@ -7,7 +7,7 @@ This script generates a WiX v4.x installer project from a specified Publish dire
 It prompts for common UI options and supports subdirectories.
 """
 __author__ = "Leland Green"
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 __license__ = "MIT"
 __date__ = "2025-06-06"
 
@@ -468,6 +468,7 @@ def create_wxs_file(output_dir, options, file_structure):
     file_id_counter = 1
     component_id_counter = 1
     main_exe_id = None  # Store the ID of the main executable for later use
+    main_exe_candidates = []  # Store potential main executable candidates
 
     # Create a dictionary to store directory elements by path and collect subdirectory names
     directory_elements = {}
@@ -524,15 +525,19 @@ def create_wxs_file(output_dir, options, file_structure):
             component_id = f"Component_{component_id_counter}"
             component_id_counter += 1
 
-            is_main_exe_component = False
             current_file_id_str = f"File_{file_id_counter}" # This is the ID for the current file
 
-            if file_info['name'].endswith('.exe') and main_exe_id is None:
-                main_exe_id = current_file_id_str # Assign the correct file_id
-                is_main_exe_component = True
+            # Collect all executable files as potential candidates
+            if file_info['name'].endswith('.exe'):
+                main_exe_candidates.append({
+                    'file_id': current_file_id_str,
+                    'name': file_info['name'],
+                    'path': file_info['path'],
+                    'component_id': component_id
+                })
 
-            # Generate a GUID for the main EXE component, others can use "*"
-            component_guid = str(uuid.uuid4()) if is_main_exe_component else "*"
+            # We'll set a stable GUID for all executable components, as we don't know yet which one will be the main one
+            component_guid = str(uuid.uuid4()) if file_info['name'].endswith('.exe') else "*"
 
             scope_attributes = {}
             if options.get('shortcut_all_users', False) : # Apply to all components for consistency
@@ -552,12 +557,10 @@ def create_wxs_file(output_dir, options, file_structure):
                 "Source": file_info['path'],
                 "Name": file_info['name']
             }
-            if is_main_exe_component:
-                # The main executable's File element is marked as KeyPath="yes".
-                # This is crucial because its component has a stable GUID and might be referenced
-                # by other features (like shortcuts). The KeyPath tells Windows Installer
-                # what file/registry key is the "key" for this component's installation status.
-                # A stable GUID is important for upgrades and patching.
+
+            # For executable files, we'll set KeyPath later after selecting the main executable
+            if file_info['name'].endswith('.exe'):
+                # We'll set this for all executables for now, and update the main one later
                 file_attributes["KeyPath"] = "yes"
 
             file_element = ET.SubElement(component, "File", **file_attributes)
@@ -584,6 +587,34 @@ def create_wxs_file(output_dir, options, file_structure):
 
                             # Associate extension with ProgId
                             ET.SubElement(prog_id, "Extension", Id=ext_id, ContentType="application/octet-stream")
+
+    # Select the best main executable from candidates
+    if main_exe_candidates:
+        # First, try to find an executable that matches the product name
+        product_name_lower = options['product_name'].lower()
+        product_match = None
+
+        for candidate in main_exe_candidates:
+            # Check if the executable name matches the product name (case insensitive)
+            if product_name_lower in candidate['name'].lower():
+                product_match = candidate
+                break
+
+        # If no match by product name, use the first candidate that's not createdump.exe
+        if not product_match:
+            for candidate in main_exe_candidates:
+                if 'createdump.exe' not in candidate['name'].lower():
+                    product_match = candidate
+                    break
+
+        # If still no match, use the first candidate
+        if not product_match and main_exe_candidates:
+            product_match = main_exe_candidates[0]
+
+        # Set the main executable ID
+        if product_match:
+            main_exe_id = product_match['file_id']
+            print(f"Selected main executable: {product_match['name']}")
 
     # Add icon if provided
     icon_added = False
