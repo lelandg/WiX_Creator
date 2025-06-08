@@ -7,7 +7,7 @@ This script generates a WiX v4.x installer project from a specified Publish dire
 It prompts for common UI options and supports subdirectories.
 """
 __author__ = "Leland Green"
-__version__ = "1.0.4"
+__version__ = "1.0.5"
 __license__ = "MIT"
 __date__ = "2025-06-06"
 
@@ -394,6 +394,66 @@ def create_wxs_file(output_dir, options, file_structure):
         ET.SubElement(package, "WixVariable", 
                      Id="WixUILicenseRtf", 
                      Value=options['license_file'])
+
+    # Add banner image if specified
+    banner_added = False
+    if options.get('banner_image'):
+        # Check if the banner image file exists
+        banner_path = options['banner_image']
+
+        # If the path is relative, try to resolve it
+        if not os.path.isabs(banner_path):
+            # Try different case variations for the filename
+            banner_dir = os.path.dirname(banner_path) or '.'
+            banner_filename = os.path.basename(banner_path)
+
+            # Check if directory exists
+            if os.path.exists(banner_dir):
+                # Get actual files in the directory with correct case
+                for filename in os.listdir(banner_dir):
+                    if filename.lower() == banner_filename.lower():
+                        # Found the file with correct case
+                        banner_path = os.path.join(banner_dir, filename)
+                        break
+
+        # Only add the banner if the file exists
+        if os.path.exists(banner_path):
+            ET.SubElement(package, "WixVariable",
+                         Id="WixUIBannerBmp",
+                         Value=banner_path)
+            banner_added = True
+        else:
+            print(f"Warning: Banner image file '{banner_path}' not found. Banner will not be included in the installer.")
+
+    # Add dialog image if specified
+    dialog_added = False
+    if options.get('dialog_image'):
+        # Check if the dialog image file exists
+        dialog_path = options['dialog_image']
+
+        # If the path is relative, try to resolve it
+        if not os.path.isabs(dialog_path):
+            # Try different case variations for the filename
+            dialog_dir = os.path.dirname(dialog_path) or '.'
+            dialog_filename = os.path.basename(dialog_path)
+
+            # Check if directory exists
+            if os.path.exists(dialog_dir):
+                # Get actual files in the directory with correct case
+                for filename in os.listdir(dialog_dir):
+                    if filename.lower() == dialog_filename.lower():
+                        # Found the file with correct case
+                        dialog_path = os.path.join(dialog_dir, filename)
+                        break
+
+        # Only add the dialog if the file exists
+        if os.path.exists(dialog_path):
+            ET.SubElement(package, "WixVariable",
+                         Id="WixUIDialogBmp",
+                         Value=dialog_path)
+            dialog_added = True
+        else:
+            print(f"Warning: Dialog image file '{dialog_path}' not found. Dialog will not be included in the installer.")
 
     # Add UI properties for installation options
     if options['ui_level'] in ['full', 'minimal']:

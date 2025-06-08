@@ -5,11 +5,11 @@ This script is designed to create a WiX installer for applications. It automates
 - **Generates a Wix XML** file based on the provided configuration.
 - **Saves the XML** file to a specified output directory.
 - **Creates a project file** for each Wix project. 
-- **Automatically reloads settings** from a configuration file, based on "Product Name."
+- **Automatically reloads settings** from a configuration file, based on `<ProjectName>`.
 - **Automatic project wizard:** Guides you through essential WiX installer options with interactive prompts or loads defaults from prior builds.
-- **Configuration management:** Saves and loads all installer settings (`<ProjectName>.json` or `last_project.json`) for reproducible, incremental editing across builds.
+- **Configuration management:** Saves and loads all installer settings (`<ProjectName>.json` &/or `last_project.json`) for reproducible, incremental editing across builds.
 - **Directory scanning:** Recursively scans your application's output directory to automatically include all files and folder structure in the installer.
-- **Customizable UI:** Prompts for standard WiX User Interface settings, such as EULA/license text (supports generating an RTF license file), install scope (per-machine/per-user), install location, and more.
+- **Customizable UI:** Prompts for standard WiX User Interface settings, such as EULA/license text (supports generating an RTF license file), banner and dialog images, install scope (per-machine/per-user), install location, and more.
 - **Outputs all essential WiX project files:**
   - `.wxs` file (WiX XML definition for the installer)
   - `.wixproj` MSBuild project file to support `dotnet build`
