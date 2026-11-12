@@ -35,10 +35,12 @@ Policy lives in `~/.config/agents/AGENTS.md` -> "Dependency, code, and secret
 scanning" and "Model delegation & cross-provider review". It is not restated
 here; read it there. What is specific to this repo:
 
-- CI runs `gitleaks` on every PR, every push to `main`, and weekly
-  (`.github/workflows/security.yml`). That is the only scanner: the repo has no
-  dependency manifests, so there is nothing for `npm audit` or `osv-scanner` to
-  read. Adding a manifest means adding those jobs and a package ecosystem.
+- CI runs `gitleaks`, `osv-scanner`, `zizmor` and the two npm jobs on every PR,
+  every push to `main`, and weekly (`.github/workflows/security.yml`). The repo
+  has no dependency manifests, so osv-scanner reads only the workflows' action
+  references and the npm jobs skip with a notice (they run only when a
+  `package-lock.json` exists at the repo root). Adding a manifest means adding
+  its package ecosystem to `dependabot.yml`; the scan jobs already exist.
 - Dependabot: `github-actions` only (`.github/dependabot.yml`), which keeps the
   workflow's pinned action SHAs current. No package ecosystem, because there is
   no dependency manifest to watch. Advisories against the actions themselves
