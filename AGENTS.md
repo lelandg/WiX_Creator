@@ -35,10 +35,12 @@ Policy lives in `~/.config/agents/AGENTS.md` -> "Dependency, code, and secret
 scanning" and "Model delegation & cross-provider review". It is not restated
 here; read it there. What is specific to this repo:
 
-- CI runs `gitleaks` on every PR, every push to `main`, and weekly
-  (`.github/workflows/security.yml`). That is the only scanner: the repo has no
-  dependency manifests, so there is nothing for `npm audit` or `osv-scanner` to
-  read. Adding a manifest means adding those jobs and a package ecosystem.
+- CI runs `gitleaks`, `osv-scanner`, `zizmor` and the two npm jobs on every PR,
+  every push to `main`, and weekly (`.github/workflows/security.yml`). The repo
+  has no dependency manifests, so osv-scanner reads only the workflows' action
+  references and the npm jobs skip with a notice (they run only when a
+  `package-lock.json` exists at the repo root). Adding a manifest means adding
+  its package ecosystem to `dependabot.yml`; the scan jobs already exist.
 - Dependabot: `github-actions` only (`.github/dependabot.yml`), which keeps the
   workflow's pinned action SHAs current. No package ecosystem, because there is
   no dependency manifest to watch. Advisories against the actions themselves
@@ -48,9 +50,14 @@ here; read it there. What is specific to this repo:
   security-update PR can ever fire for a pinned action, an
   `applies-to: security-updates` group over github-actions is dead config, and
   the weekly version update is their only automatic remediation -- which is why
-  the github-actions block carries no semver-major ignore. DETECTION comes from
-  osv-scanner's `github/actions` plugin, which is NOT in its default plugin set
-  and so is named explicitly in `security.yml`.
+  the github-actions block carries no semver-major ignore. DETECTION comes
+  from the `zizmor` job in `security.yml`: it maps each SHA pin to its
+  release tag and fails on a known-vulnerable, impostor or unpinned action.
+  osv-scanner's `github/actions` plugin only lists the pinned actions: with
+  osv-scanner 2.7.0 it did not flag `tj-actions/changed-files`
+  (GHSA-mrrh-fwg8-r2c3) at a vulnerable SHA or tag. A SHA that no tag of
+  the action's repository points at would match no advisory, so the zizmor
+  job also fails on such a pin: pin released versions.
 - Alerts and automatic security **updates** are two switches, not one. Alerts
   only report; the half that opens PRs is `automated-security-fixes`, left OFF
   here deliberately.
