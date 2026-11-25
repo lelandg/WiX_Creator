@@ -57,9 +57,9 @@ there. What is specific to this repo:
   reviews every non-draft PR automatically and re-reviews every push, skips
   PRs authored by `dependabot[bot]` and `renovate[bot]`, and is skipped by the
   `no-ai-review` label when the label is on the PR at the moment the review
-  fires: open the PR already carrying it, or open it as a draft, add the
-  label, then mark it ready. A label added after the review has started is
-  too late (the label has to exist in the repo first; the `gh label create`
+  fires: open the PR as a draft, add the label, then mark it ready
+  (`gh pr create --label` adds the label just after the PR exists, so it can
+  lose the race). A label added after the review has started is too late (the label has to exist in the repo first; the `gh label create`
   command is in `.coderabbit.yaml`). The list is additive, not closed: nothing
   named here replaces a council member. A green CodeRabbit check does not mean a review
   ran or that it found nothing: read the check's output title and the inline
